@@ -4,19 +4,20 @@ import {
   TouchableOpacity, 
   View, 
   Image,
-  Alert
+  Alert,
+  Modal,
+  StyleSheet
 } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
+import * as Camera from 'expo-camera';
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
 import {
   getContainerStyle,
   getHeaderStyle,
   getSectionStyle,
-  getContentStyle,
   getCardStyle,
-  getButtonStyle,
   getTextStyle,
   getColor,
   getSpacing
@@ -24,14 +25,122 @@ import {
 
 export default function DiseaseDetectionScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const colors = Colors[colorScheme];
 
-  const handleUpload = () => {
-    Alert.alert("Upload", "Upload functionality will be implemented here");
+  // State for image handling
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  // Request camera permissions
+  const requestCameraPermission = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    return status === 'granted';
   };
 
+  // Request media library permissions
+  const requestMediaLibraryPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    return status === 'granted';
+  };
+
+  // Open camera to take photo
+  const openCamera = async () => {
+    try {
+      const hasPermission = await requestCameraPermission();
+      if (!hasPermission) {
+        Alert.alert('Permission Required', 'Camera permission is required to take photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+        setShowImageModal(true);
+        setShowActionSheet(false);
+      }
+    } catch () {
+      Alert.alert('Error', 'Failed to open camera. Please try again.');
+    }
+  };
+
+  // Open gallery to select image
+  const openGallery = async () => {
+    try {
+      const hasPermission = await requestMediaLibraryPermission();
+      if (!hasPermission) {
+        Alert.alert('Permission Required', 'Media library permission is required to select photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+        setShowImageModal(true);
+        setShowActionSheet(false);
+      }
+    } catch () {
+      Alert.alert('Error', 'Failed to open gallery. Please try again.');
+    }
+  };
+
+  // Show action sheet for image source selection
+  const showImageSourceActionSheet = () => {
+    setShowActionSheet(true);
+  };
+
+  // Analyze the selected image
+  const analyzeImage = async () => {
+    if (!selectedImage) return;
+    
+    setIsAnalyzing(true);
+    setShowImageModal(false);
+    
+    // Simulate analysis delay
+    setTimeout(() => {
+      setIsAnalyzing(false);
+      Alert.alert(
+        'Analysis Complete',
+        'Disease detection analysis completed. Results will be displayed here.',
+        [
+          { text: 'OK', onPress: () => setSelectedImage(null) }
+        ]
+      );
+    }, 3000);
+  };
+
+  // Handle upload button press
+  const handleUpload = () => {
+    showImageSourceActionSheet();
+  };
+
+  // Handle quick action button press
   const handleQuickAction = (action: string) => {
-    Alert.alert("Quick Action", `${action} functionality will be implemented here`);
+    switch (action) {
+      case 'Camera':
+        openCamera();
+        break;
+      case 'Gallery':
+        openGallery();
+        break;
+      case 'Scan':
+        Alert.alert('Scan', 'Scan functionality will be implemented here');
+        break;
+      default:
+        Alert.alert('Quick Action', `${action} functionality will be implemented here`);
+    }
   };
 
   const recentScans = [
@@ -47,7 +156,10 @@ export default function DiseaseDetectionScreen() {
   ];
 
   return (
-    <View style={getContainerStyle(colorScheme)}>
+    <ScrollView 
+      style={getContainerStyle(colorScheme)}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={getHeaderStyle(colorScheme)}>
         <View style={{
@@ -160,7 +272,6 @@ export default function DiseaseDetectionScreen() {
       </View>
 
       {/* Content */}
-      <ScrollView style={getContentStyle(colorScheme)} showsVerticalScrollIndicator={false}>
         {/* Recent Scans */}
         <View style={getCardStyle(colorScheme)}>
           <View style={{
@@ -365,8 +476,221 @@ export default function DiseaseDetectionScreen() {
         </View>
 
         <View style={{ height: 80 }} />
-      </ScrollView>
-    </View>
+
+      {/* Action Sheet Modal */}
+      <Modal
+        visible={showActionSheet}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowActionSheet(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.actionSheet, { backgroundColor: getColor(colorScheme, 'surface') }]}>
+            <View style={styles.actionSheetHeader}>
+              <ThemedText style={[styles.actionSheetTitle, { color: getColor(colorScheme, 'text') }]}>
+                Select Image Source
+              </ThemedText>
+              <TouchableOpacity onPress={() => setShowActionSheet(false)}>
+                <Ionicons name="close" size={24} color={getColor(colorScheme, 'outline')} />
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.actionSheetItem, { borderBottomColor: getColor(colorScheme, 'outline') }]}
+              onPress={openCamera}
+            >
+              <Ionicons name="camera" size={24} color={getColor(colorScheme, 'primary')} />
+              <ThemedText style={[styles.actionSheetItemText, { color: getColor(colorScheme, 'text') }]}>
+                Take Photo
+              </ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionSheetItem, { borderBottomColor: getColor(colorScheme, 'outline') }]}
+              onPress={openGallery}
+            >
+              <Ionicons name="images" size={24} color={getColor(colorScheme, 'primary')} />
+              <ThemedText style={[styles.actionSheetItemText, { color: getColor(colorScheme, 'text') }]}>
+                Choose from Gallery
+              </ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.actionSheetItem}
+              onPress={() => setShowActionSheet(false)}
+            >
+              <ThemedText style={[styles.actionSheetCancelText, { color: getColor(colorScheme, 'error') }]}>
+                Cancel
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.imageModal, { backgroundColor: getColor(colorScheme, 'surface') }]}>
+            <View style={styles.imageModalHeader}>
+              <ThemedText style={[styles.imageModalTitle, { color: getColor(colorScheme, 'text') }]}>
+                Crop Image Preview
+              </ThemedText>
+              <TouchableOpacity onPress={() => setShowImageModal(false)}>
+                <Ionicons name="close" size={24} color={getColor(colorScheme, 'outline')} />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedImage && (
+              <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+            )}
+            
+            <View style={styles.imageModalActions}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: getColor(colorScheme, 'outline') }]}
+                onPress={() => setShowImageModal(false)}
+              >
+                <ThemedText style={[styles.actionButtonText, { color: getColor(colorScheme, 'text') }]}>
+                  Cancel
+                </ThemedText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: getColor(colorScheme, 'primary') }]}
+                onPress={analyzeImage}
+              >
+                <ThemedText style={[styles.actionButtonText, { color: getColor(colorScheme, 'buttonText') }]}>
+                  Analyze Image
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Analysis Loading Modal */}
+      <Modal
+        visible={isAnalyzing}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.loadingModal, { backgroundColor: getColor(colorScheme, 'surface') }]}>
+            <View style={[styles.loadingSpinner, { borderColor: getColor(colorScheme, 'primary') }]} />
+            <ThemedText style={[styles.loadingText, { color: getColor(colorScheme, 'text') }]}>
+              Analyzing crop image...
+            </ThemedText>
+            <ThemedText style={[styles.loadingSubtext, { color: getColor(colorScheme, 'outline') }]}>
+              Please wait while we detect diseases
+            </ThemedText>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  actionSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 34,
+  },
+  actionSheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  actionSheetTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  actionSheetItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+  },
+  actionSheetItemText: {
+    fontSize: 16,
+    marginLeft: 16,
+  },
+  actionSheetCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  imageModal: {
+    margin: 20,
+    borderRadius: 16,
+    maxHeight: '80%',
+  },
+  imageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  imageModalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  previewImage: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover',
+  },
+  imageModalActions: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingModal: {
+    margin: 40,
+    padding: 40,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  loadingSpinner: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 4,
+    borderTopColor: 'transparent',
+    marginBottom: 20,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+  },
+});
 

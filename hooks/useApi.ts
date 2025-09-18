@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { API_ENDPOINTS } from '../env';
+import { API_ENDPOINTS } from '@/env';
 
 // Types
 export type CropPrice = {
@@ -38,15 +38,28 @@ const fetchCities = async (): Promise<City[]> => {
   }
 };
 
-const fetchPrices = async (cityId?: string): Promise<CropPrice[]> => {
+const fetchPrices = async (filters?: {
+  city?: string;
+  crop?: string;
+  date?: string;
+}): Promise<CropPrice[]> => {
   let url = API_ENDPOINTS.PRICES;
-  if (cityId && cityId.trim() !== '') {
-    // Find the city name by ID and use it in the query
-    const cities = await fetchCities();
-    const city = cities.find(c => c._id === cityId);
-    if (city) {
-      url += `?city=${encodeURIComponent(city.name)}`;
-    }
+  const queryParams = new URLSearchParams();
+  
+  if (filters?.city && filters.city.trim() !== '') {
+    queryParams.append('city', filters.city);
+  }
+  
+  if (filters?.crop && filters.crop.trim() !== '') {
+    queryParams.append('crop', filters.crop);
+  }
+  
+  if (filters?.date && filters.date.trim() !== '') {
+    queryParams.append('date', filters.date);
+  }
+  
+  if (queryParams.toString()) {
+    url += `?${queryParams.toString()}`;
   }
   
   const response = await fetch(url);
@@ -97,11 +110,15 @@ export const useCities = () => {
   });
 };
 
-export const usePrices = (cityId?: string) => {
+export const usePrices = (filters?: {
+  city?: string;
+  crop?: string;
+  date?: string;
+}) => {
   return useQuery({
-    queryKey: ['prices', cityId],
-    queryFn: () => fetchPrices(cityId),
-    enabled: true, // Always enabled to fetch all prices when no city is selected
+    queryKey: ['prices', filters],
+    queryFn: () => fetchPrices(filters),
+    enabled: true, // Always enabled to fetch prices
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
   });
@@ -123,4 +140,70 @@ export const filterCropsWithPrices = (crops: CropPrice[]): CropPrice[] => {
     // Show crops that have either min_price or max_price that's not "-"
     return crop.min_price !== '-' || crop.max_price !== '-';
   });
+};
+
+// Price conversion utilities
+export const convertPrice = (price: string, fromUnit: '100kg' | '40kg' | '1kg', toUnit: '100kg' | '40kg' | '1kg'): string => {
+  if (price === '-' || !price) return '-';
+  
+  const numericPrice = parseFloat(price);
+  if (isNaN(numericPrice)) return '-';
+  
+  // Convert to base unit (100kg)
+  let basePrice: number;
+  switch (fromUnit) {
+    case '100kg':
+      basePrice = numericPrice;
+      break;
+    case '40kg':
+      basePrice = (numericPrice / 40) * 100;
+      break;
+    case '1kg':
+      basePrice = numericPrice * 100;
+      break;
+    default:
+      return price;
+  }
+  
+  // Convert from base unit to target unit
+  let convertedPrice: number;
+  switch (toUnit) {
+    case '100kg':
+      convertedPrice = basePrice;
+      break;
+    case '40kg':
+      convertedPrice = (basePrice / 100) * 40;
+      break;
+    case '1kg':
+      convertedPrice = basePrice / 100;
+      break;
+    default:
+      return price;
+  }
+  
+  return convertedPrice.toFixed(2);
+};
+
+// Get price display in kg only - show only min/max
+export const getKgPriceDisplay = (minPrice: string, maxPrice: string): {
+  minKg: string;
+  maxKg: string;
+  hasValidPrices: boolean;
+} => {
+  if (minPrice === '-' && maxPrice === '-') {
+    return {
+      minKg: '-',
+      maxKg: '-',
+      hasValidPrices: false
+    };
+  }
+  
+  const minKg = minPrice === '-' ? '-' : convertPrice(minPrice, '100kg', '1kg');
+  const maxKg = maxPrice === '-' ? '-' : convertPrice(maxPrice, '100kg', '1kg');
+  
+  return {
+    minKg,
+    maxKg,
+    hasValidPrices: minKg !== '-' || maxKg !== '-'
+  };
 };

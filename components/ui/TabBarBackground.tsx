@@ -9,14 +9,14 @@ export default function TabBarBackground() {
   return (
     <View 
       style={{
-        backgroundColor: colors.background,
-        borderTopColor: colors.outline,
+        backgroundColor: colors.surface,
+        borderTopColor: colors.outline + '30',
         borderTopWidth: 1,
         shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 8,
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 12,
       }}
     />
   );

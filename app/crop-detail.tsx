@@ -3,8 +3,8 @@ import { ScrollView, TouchableOpacity, View, StatusBar } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { getKgPriceDisplay, convertPrice } from "@/hooks/useApi";
 import {
   getContainerStyle,
   getHeaderStyle,
@@ -31,7 +31,6 @@ interface CropData {
 
 export default function CropDetailScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const colors = Colors[colorScheme];
   const router = useRouter();
   const params = useLocalSearchParams();
   
@@ -65,18 +64,21 @@ export default function CropDetailScreen() {
     }
   };
 
-  // Get price display
+  // Get price display in kg
   const getPriceDisplay = (minPrice: string, maxPrice: string) => {
-    if (minPrice === '-' && maxPrice === '-') {
+    const priceData = getKgPriceDisplay(minPrice, maxPrice);
+    
+    if (!priceData.hasValidPrices) {
       return 'Not Available';
     }
-    if (minPrice === '-') {
-      return `Rs. ${maxPrice}`;
+    
+    if (priceData.minKg === '-') {
+      return `Rs. ${priceData.maxKg}/kg`;
     }
-    if (maxPrice === '-') {
-      return `Rs. ${minPrice}`;
+    if (priceData.maxKg === '-') {
+      return `Rs. ${priceData.minKg}/kg`;
     }
-    return `Rs. ${minPrice} - ${maxPrice}`;
+    return `Rs. ${priceData.minKg} - ${priceData.maxKg}/kg`;
   };
 
   // Get crop name without number prefix
@@ -195,7 +197,7 @@ export default function CropDetailScreen() {
               color: getColor(colorScheme, 'primary'),
               marginBottom: getSpacing('xs')
             }}>
-              Current Market Price
+              Current Market Price (per kg)
             </ThemedText>
             <ThemedText style={{
               fontSize: 24,
@@ -235,16 +237,18 @@ export default function CropDetailScreen() {
           </View>
 
           <View style={{ marginBottom: getSpacing('md') }}>
-            {[
+            {(() => {
+              const priceData = getKgPriceDisplay(cropData.min_price, cropData.max_price);
+              return [
               { 
-                label: 'Minimum Price', 
-                value: cropData.min_price !== '-' ? `Rs. ${cropData.min_price}` : 'Not Available',
+                  label: 'Minimum Price (per kg)', 
+                  value: priceData.minKg !== '-' ? `Rs. ${priceData.minKg}/kg` : 'Not Available',
                 icon: 'arrow-down',
                 color: getColor(colorScheme, 'success')
               },
               { 
-                label: 'Maximum Price', 
-                value: cropData.max_price !== '-' ? `Rs. ${cropData.max_price}` : 'Not Available',
+                  label: 'Maximum Price (per kg)', 
+                  value: priceData.maxKg !== '-' ? `Rs. ${priceData.maxKg}/kg` : 'Not Available',
                 icon: 'arrow-up',
                 color: getColor(colorScheme, 'warning')
               },
@@ -254,7 +258,8 @@ export default function CropDetailScreen() {
                 icon: getPriceTrend() === 'up' ? 'trending-up' : 'trending-down',
                 color: getPriceTrend() === 'up' ? getColor(colorScheme, 'success') : getColor(colorScheme, 'error')
               }
-            ].map((item, index) => (
+              ];
+            })().map((item, index) => (
               <View
                 key={index}
                 style={{
@@ -321,22 +326,17 @@ export default function CropDetailScreen() {
 
           <View style={{ marginBottom: getSpacing('md') }}>
             {[
-              { 
-                label: 'Quantity Available', 
-                value: cropData.quantity !== '-' ? cropData.quantity : 'Not Available',
-                icon: 'scale',
-                color: getColor(colorScheme, 'info')
-              },
+          
               { 
                 label: 'FQP (Fair Quality Price)', 
-                value: cropData.fqp !== '-' ? `Rs. ${cropData.fqp}` : 'Not Available',
+                value: cropData.fqp !== '-' ? `Rs. ${convertPrice(cropData.fqp, '100kg', '1kg')}/kg` : 'Not Available',
                 icon: 'star',
                 color: getColor(colorScheme, 'accent')
               },
               { 
                 label: 'Market Date', 
-                value: formatDate(cropData.date),
-                icon: 'calendar',
+                value: formatDate(cropData.scraped_at),
+                icon: 'calendar-month',
                 color: getColor(colorScheme, 'primary')
               }
             ].map((item, index) => (

@@ -15,31 +15,32 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.outline,
+        tabBarInactiveTintColor: colors.outline + '80',
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colors.outline,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.outline + '30',
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 12,
-          paddingTop: 12,
-          paddingHorizontal: 16,
+          height: Platform.OS === 'ios' ? 100 : 80,
+          paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+          paddingTop: 8,
+          paddingHorizontal: 20,
           shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 8,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          elevation: 12,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: '600',
           marginTop: 4,
+          letterSpacing: 0.2,
         },
         tabBarIconStyle: {
-          marginTop: 4,
+          marginTop: 0,
         },
       }}
     >
@@ -48,10 +49,29 @@ export default function TabLayout() {
         options={{
           title: "Disease Detection",
           tabBarIcon: ({ color, focused }) => (
-            <View className={`p-2 rounded-full ${focused ? 'bg-opacity-20' : ''}`} style={{
-              backgroundColor: focused ? colors.primary + '20' : 'transparent'
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: focused ? colors.primary + '15' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: focused ? 2 : 0,
+              borderColor: focused ? colors.primary + '40' : 'transparent',
+              shadowColor: focused ? colors.primary : 'transparent',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: focused ? 4 : 0,
             }}>
-              <Entypo size={24} name="leaf" color={color} />
+              <Entypo 
+                size={focused ? 24 : 22} 
+                name="leaf" 
+                color={focused ? colors.primary : color}
+                style={{
+                  transform: [{ scale: focused ? 1.1 : 1 }]
+                }}
+              />
             </View>
           ),
         }}
@@ -61,10 +81,29 @@ export default function TabLayout() {
         options={{
           title: "AI Chat",
           tabBarIcon: ({ color, focused }) => (
-            <View className={`p-2 rounded-full ${focused ? 'bg-opacity-20' : ''}`} style={{
-              backgroundColor: focused ? colors.primary + '20' : 'transparent'
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: focused ? colors.primary + '15' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: focused ? 2 : 0,
+              borderColor: focused ? colors.primary + '40' : 'transparent',
+              shadowColor: focused ? colors.primary : 'transparent',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: focused ? 4 : 0,
             }}>
-              <Ionicons size={24} name="chatbubble-ellipses" color={color} />
+              <Ionicons 
+                size={focused ? 24 : 22} 
+                name="chatbubble-ellipses" 
+                color={focused ? colors.primary : color}
+                style={{
+                  transform: [{ scale: focused ? 1.1 : 1 }]
+                }}
+              />
             </View>
           ),
         }}
@@ -74,10 +113,29 @@ export default function TabLayout() {
         options={{
           title: "Crop Prices",
           tabBarIcon: ({ color, focused }) => (
-            <View className={`p-2 rounded-full ${focused ? 'bg-opacity-20' : ''}`} style={{
-              backgroundColor: focused ? colors.primary + '20' : 'transparent'
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: focused ? colors.primary + '15' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: focused ? 2 : 0,
+              borderColor: focused ? colors.primary + '40' : 'transparent',
+              shadowColor: focused ? colors.primary : 'transparent',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: focused ? 4 : 0,
             }}>
-              <FontAwesome6 size={24} name="chart-line" color={color} />
+              <FontAwesome6 
+                size={focused ? 24 : 22} 
+                name="chart-line" 
+                color={focused ? colors.primary : color}
+                style={{
+                  transform: [{ scale: focused ? 1.1 : 1 }]
+                }}
+              />
             </View>
           ),
         }}
