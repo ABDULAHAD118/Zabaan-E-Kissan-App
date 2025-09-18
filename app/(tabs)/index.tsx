@@ -9,7 +9,6 @@ import {
   StyleSheet
 } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
-import * as Camera from 'expo-camera';
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
@@ -34,7 +33,7 @@ export default function DiseaseDetectionScreen() {
 
   // Request camera permissions
   const requestCameraPermission = async () => {
-    const { status } = await Camera.requestCameraPermissionsAsync();
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
     return status === 'granted';
   };
 
@@ -65,7 +64,7 @@ export default function DiseaseDetectionScreen() {
         setShowImageModal(true);
         setShowActionSheet(false);
       }
-    } catch () {
+    } catch (error) {
       Alert.alert('Error', 'Failed to open camera. Please try again.');
     }
   };
@@ -91,7 +90,7 @@ export default function DiseaseDetectionScreen() {
         setShowImageModal(true);
         setShowActionSheet(false);
       }
-    } catch () {
+    } catch (error) {
       Alert.alert('Error', 'Failed to open gallery. Please try again.');
     }
   };
