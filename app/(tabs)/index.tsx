@@ -150,33 +150,30 @@ export default function DiseaseDetectionScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View style={getHeaderStyle(colorScheme)}>
+      <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('xs') }]}>
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
-          marginBottom: getSpacing('md')
+          marginBottom: getSpacing('sm')
         }}>
           <View style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
+            width: 36,
+            height: 36,
+            borderRadius: 18,
             backgroundColor: getColor(colorScheme, 'highlight'),
             alignItems: 'center',
             justifyContent: 'center',
-            marginRight: getSpacing('md')
+            marginRight: getSpacing('sm')
           }}>
-            <Entypo name="leaf" size={24} color={getColor(colorScheme, 'primary')} />
+            <Entypo name="leaf" size={18} color={getColor(colorScheme, 'primary')} />
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText style={getTextStyle(colorScheme, 'title')}>
-              Disease Detection
-            </ThemedText>
             <ThemedText style={{
-              ...getTextStyle(colorScheme, 'body'),
-              color: getColor(colorScheme, 'buttonText'),
-              opacity: 0.9
+              ...getTextStyle(colorScheme, 'title'),
+              fontSize: 30,
+              fontWeight: '600'
             }}>
-              AI-powered crop health analysis
+              Disease Detection
             </ThemedText>
           </View>
         </View>

@@ -19,6 +19,16 @@ export type City = {
   name: string;
 };
 
+// Chat API Types
+export type ChatMessage = {
+  query: string;
+};
+
+export type ChatResponse = {
+  response: string;
+  thread_id: string;
+};
+
 // API Functions
 const fetchCities = async (): Promise<City[]> => {
   const response = await fetch(API_ENDPOINTS.CITIES);
@@ -99,6 +109,26 @@ const searchPricesByCity = async (cityName: string): Promise<CropPrice[]> => {
   } else {
     return [];
   }
+};
+
+export const sendChatMessage = async (message: string, threadId: string = '123'): Promise<ChatResponse> => {
+  const response = await fetch(`${API_ENDPOINTS.CHAT}/${threadId}`, {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      query: message
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data;
 };
 
 // Custom Hooks

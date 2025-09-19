@@ -268,34 +268,34 @@ export default function PricesScreen() {
       }
     >
       {/* Header */}
-      <View style={getHeaderStyle(colorScheme)}>
-        <ThemedText style={getTextStyle(colorScheme, 'title')}>
-          Crop Prices
-        </ThemedText>
-        <ThemedText style={{
-          ...getTextStyle(colorScheme, 'body'),
-          textAlign: 'center',
-          marginBottom: getSpacing('sm'),
-          color: getColor(colorScheme, 'buttonText'),
-          opacity: 0.9
-        }}>
-          Real-time market rates across Pakistan
-        </ThemedText>
+      <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('sm') }]}>
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center'
+          marginBottom: getSpacing('sm')
         }}>
-          <MaterialIcons name="update" size={16} color={getColor(colorScheme, 'buttonText')} />
-          <ThemedText style={{
-            marginLeft: getSpacing('xs'),
-            fontSize: 14,
-            color: getColor(colorScheme, 'buttonText'),
-            opacity: 0.9
+          <View style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: getColor(colorScheme, 'highlight'),
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: getSpacing('sm')
           }}>
-            Live data from official sources
-          </ThemedText>
+            <Ionicons name="trending-up" size={18} color={getColor(colorScheme, 'primary')} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'title'),
+              fontSize: 30,
+              fontWeight: '600'
+            }}>
+              Crop Prices
+            </ThemedText>
+          </View>
         </View>
+      
       </View>
 
       {/* Search and Filters */}

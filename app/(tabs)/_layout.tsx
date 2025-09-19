@@ -1,11 +1,10 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform, View } from "react-native";
-import { HapticTab } from "@/components/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Entypo, Ionicons, FontAwesome6 } from "@expo/vector-icons";
+import { Entypo, Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -15,22 +14,16 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.outline + '80',
+        tabBarInactiveTintColor: colors.outline + '90',
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.outline + '30',
           height: Platform.OS === 'ios' ? 100 : 80,
           paddingBottom: Platform.OS === 'ios' ? 34 : 16,
-          paddingTop: 8,
-          paddingHorizontal: 10,
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 12,
+          paddingTop: 10,
+          paddingHorizontal: 5,
         },
         tabBarLabelStyle: {
           fontSize: 10,
@@ -115,9 +108,9 @@ export default function TabLayout() {
               borderWidth: focused ? 2 : 0,
               borderColor: focused ? colors.primary + '70' : 'transparent',
             }}>
-              <FontAwesome6 
+              <Ionicons 
                 size={focused ? 24 : 22} 
-                name="chart-line" 
+                name="trending-up" 
                 color={focused ? colors.primary : color}
                 style={{
                   transform: [{ scale: focused ? 1.1 : 1 }]

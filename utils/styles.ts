@@ -9,7 +9,7 @@ export const getColor = (colorScheme: ColorScheme, colorKey: keyof typeof Colors
 
 // Common style combinations
 export const getHeaderStyle = (colorScheme: ColorScheme) => ({
-  paddingTop: 48,
+  paddingTop: 16,
   paddingHorizontal: 16,
   paddingBottom: 16,
   backgroundColor: getColor(colorScheme, 'primary'),
@@ -71,7 +71,7 @@ export const getButtonStyle = (colorScheme: ColorScheme, variant: 'primary' | 's
 export const getInputStyle = (colorScheme: ColorScheme) => ({
   borderRadius: 12,
   paddingHorizontal: 16,
-  paddingVertical: 12,
+  paddingVertical: 5,
   borderWidth: 1,
   fontSize: 16,
   backgroundColor: getColor(colorScheme, 'input'),
@@ -145,7 +145,6 @@ export const getTextStyle = (colorScheme: ColorScheme, variant: 'title' | 'subti
         ...baseStyle,
         fontSize: 28,
         fontWeight: 'bold' as const,
-        lineHeight: 50,
       };
     case 'subtitle':
       return {
