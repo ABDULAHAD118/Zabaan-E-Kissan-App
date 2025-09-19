@@ -12,11 +12,6 @@ export default function TabBarBackground() {
         backgroundColor: colors.surface,
         borderTopColor: colors.outline + '30',
         borderTopWidth: 1,
-        shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 12,
       }}
     />
   );

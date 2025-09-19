@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { 
   ScrollView, 
   TextInput, 
@@ -118,15 +118,19 @@ export default function PricesScreen() {
   const filteredSearchResults = filterCropsWithPrices(searchResults);
 
   // Extract unique crops from all prices for the crop filter
-  React.useEffect(() => {
-    const allPrices = searchQuery ? filteredSearchResults : filteredPrices;
-    const uniqueCrops = Array.from(new Set(
-      allPrices.map(crop => getCleanCropName(crop.crop))
-    )).sort();
-    setAvailableCrops(uniqueCrops);
-  }, [filteredPrices, filteredSearchResults, searchQuery]);
+    useEffect(() => {
+        const allPrices = searchQuery ? filteredSearchResults : filteredPrices;
+        const uniqueCrops = Array.from(
+            new Set(allPrices.map(crop => getCleanCropName(crop.crop)))
+        ).sort();
 
-  // Use backend filtered results directly
+        setAvailableCrops(prev =>
+            JSON.stringify(prev) === JSON.stringify(uniqueCrops) ? prev : uniqueCrops
+        );
+    }, [filteredPrices, filteredSearchResults, searchQuery]);
+
+
+    // Use backend filtered results directly
   const finalFilteredPrices = filteredPrices;
   const finalFilteredSearchResults = filteredSearchResults;
 
@@ -152,14 +156,12 @@ export default function PricesScreen() {
     setSearchQuery(text);
     generateSearchSuggestions(text);
     
-    // If search query is empty, show all prices
     if (!text.trim()) {
       setShowSuggestions(false);
       return;
     }
 
-    // If search query is a city name, search by city
-    const isCitySearch = cities.some(city => 
+    const isCitySearch = cities.some(city =>
       city.name.toLowerCase().includes(text.toLowerCase())
     );
 
@@ -187,7 +189,6 @@ export default function PricesScreen() {
   // Check if any filters are active
   const hasActiveFilters = selectedCity || selectedCrop || selectedDateRange || searchQuery;
 
-  // Handle crop item press - navigate to detail page
   const handleCropPress = (crop: CropPrice) => {
     const cropData = encodeURIComponent(JSON.stringify(crop));
     router.push(`/crop-detail?crop=${cropData}`);
@@ -203,21 +204,18 @@ export default function PricesScreen() {
   };
   
 
-  // Get crop name without number prefix
   const getCleanCropName = (cropString: string) => {
     return cropString.replace(/^\d+/, '').trim();
   };
 
-  // Set initial city when cities are loaded - but don't restrict to just one city initially
-  React.useEffect(() => {
-    if (cities.length > 0 && !selectedCity) {
-      // Don't set a default city - show all cities' data initially
-      setSelectedCity("");
-    }
-  }, [cities, selectedCity]);
+    useEffect(() => {
+        if (cities.length > 0 && selectedCity === undefined) {
+            setSelectedCity("");
+        }
+    }, [cities, selectedCity]);
 
-  // Handle errors
-  if (citiesError) {
+
+    if (citiesError) {
     return (
       <View style={getContainerStyle(colorScheme)}>
         <View style={{
@@ -643,7 +641,7 @@ export default function PricesScreen() {
                     ...getTextStyle(colorScheme, 'heading'),
                     color: getColor(colorScheme, 'primary')
                   }}>
-                    Search Results for "{searchQuery}"
+                    Search Results for &#34; {searchQuery} &#34;
                   </ThemedText>
                   <View style={{
                     paddingHorizontal: getSpacing('sm'),

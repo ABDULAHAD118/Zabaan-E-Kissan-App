@@ -31,45 +31,35 @@ export default function DiseaseDetectionScreen() {
   const [showActionSheet, setShowActionSheet] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // Request camera permissions
-  const requestCameraPermission = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    return status === 'granted';
-  };
-
   // Request media library permissions
   const requestMediaLibraryPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     return status === 'granted';
   };
 
-  // Open camera to take photo
-  const openCamera = async () => {
-    try {
-      const hasPermission = await requestCameraPermission();
-      if (!hasPermission) {
-        Alert.alert('Permission Required', 'Camera permission is required to take photos.');
-        return;
-      }
+    const openCamera = async () => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert("Permission Required", "Camera permission is required to take photos.");
+            return;
+        }
 
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ["images"],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+        });
 
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
-        setShowImageModal(true);
-        setShowActionSheet(false);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to open camera. Please try again.');
-    }
-  };
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            setSelectedImage(result.assets[0].uri);
+            setShowImageModal(true);
+            setShowActionSheet(false);
+        }
+    };
 
-  // Open gallery to select image
+
+    // Open gallery to select image
   const openGallery = async () => {
     try {
       const hasPermission = await requestMediaLibraryPermission();
@@ -79,7 +69,7 @@ export default function DiseaseDetectionScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,

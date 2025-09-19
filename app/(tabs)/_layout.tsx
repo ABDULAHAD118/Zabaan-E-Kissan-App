@@ -22,11 +22,10 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.outline + '30',
-          borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 100 : 80,
           paddingBottom: Platform.OS === 'ios' ? 34 : 16,
           paddingTop: 8,
-          paddingHorizontal: 20,
+          paddingHorizontal: 10,
           shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.15,
@@ -53,16 +52,12 @@ export default function TabLayout() {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: focused ? colors.primary + '15' : 'transparent',
+                marginBottom:5,
+              backgroundColor: focused ? colors.primary + '30' : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: focused ? 2 : 0,
-              borderColor: focused ? colors.primary + '40' : 'transparent',
-              shadowColor: focused ? colors.primary : 'transparent',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: focused ? 4 : 0,
+              borderColor: focused ? colors.primary + '70' : 'transparent',
             }}>
               <Entypo 
                 size={focused ? 24 : 22} 
@@ -85,16 +80,12 @@ export default function TabLayout() {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: focused ? colors.primary + '15' : 'transparent',
+                marginBottom:5,
+              backgroundColor: focused ? colors.primary + '30' : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: focused ? 2 : 0,
-              borderColor: focused ? colors.primary + '40' : 'transparent',
-              shadowColor: focused ? colors.primary : 'transparent',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: focused ? 4 : 0,
+              borderColor: focused ? colors.primary + '70' : 'transparent',
             }}>
               <Ionicons 
                 size={focused ? 24 : 22} 
@@ -117,16 +108,12 @@ export default function TabLayout() {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: focused ? colors.primary + '15' : 'transparent',
+                marginBottom:5,
+              backgroundColor: focused ? colors.primary + '30' : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
               borderWidth: focused ? 2 : 0,
-              borderColor: focused ? colors.primary + '40' : 'transparent',
-              shadowColor: focused ? colors.primary : 'transparent',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: focused ? 4 : 0,
+              borderColor: focused ? colors.primary + '70' : 'transparent',
             }}>
               <FontAwesome6 
                 size={focused ? 24 : 22} 
