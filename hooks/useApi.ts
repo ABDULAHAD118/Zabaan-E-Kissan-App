@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { API_ENDPOINTS } from '@/env';
 
 // Types
@@ -31,12 +32,9 @@ export type ChatResponse = {
 
 // API Functions
 const fetchCities = async (): Promise<City[]> => {
-  const response = await fetch(API_ENDPOINTS.CITIES);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  const data = await response.json();
+  const response = await axios.get(API_ENDPOINTS.CITIES);
+  const data = response.data;
+  console.log(data);
   if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
     // Convert the array of city names to the expected format
     return data.data.map((cityName: string, index: number) => ({
@@ -72,12 +70,8 @@ const fetchPrices = async (filters?: {
     url += `?${queryParams.toString()}`;
   }
   
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  const data = await response.json();
+  const response = await axios.get(url);
+  const data = response.data;
   
   if (data && data.data && Array.isArray(data.data)) {
     return data.data;
@@ -94,13 +88,8 @@ const searchPricesByCity = async (cityName: string): Promise<CropPrice[]> => {
   }
 
   const url = `${API_ENDPOINTS.PRICES}?city=${encodeURIComponent(cityName)}`;
-  const response = await fetch(url);
-  
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  const data = await response.json();
+  const response = await axios.get(url);
+  const data = response.data;
   
   if (data && data.data && Array.isArray(data.data)) {
     return data.data;
@@ -112,23 +101,16 @@ const searchPricesByCity = async (cityName: string): Promise<CropPrice[]> => {
 };
 
 export const sendChatMessage = async (message: string, threadId: string = '123'): Promise<ChatResponse> => {
-  const response = await fetch(`${API_ENDPOINTS.CHAT}/${threadId}`, {
-    method: 'POST',
+  const response = await axios.post(`${API_ENDPOINTS.CHAT}/${threadId}`, {
+    query: message
+  }, {
     headers: {
       'accept': 'application/json',
       'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query: message
-    })
+    }
   });
   
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  const data = await response.json();
-  return data;
+  return response.data;
 };
 
 // Custom Hooks

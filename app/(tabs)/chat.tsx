@@ -367,7 +367,7 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       {/* Header */}
-      <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('sm') }]}>
+      <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('sm'),marginBottom: getSpacing('sm') }]}>
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',

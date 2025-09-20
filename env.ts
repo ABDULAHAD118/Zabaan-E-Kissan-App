@@ -1,6 +1,6 @@
 // Environment Configuration
 export const ENV = {
-  API_BASE_URL: 'http://127.0.0.1:8000',
+  API_BASE_URL: 'https://price-scrapping-api.vercel.app',
   APP_NAME: 'Zabaan-E-Kisaan',
   APP_VERSION: '1.0.0',
 } as const;

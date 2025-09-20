@@ -58,6 +58,8 @@ export default function PricesScreen() {
     refetch: refetchCities 
   } = useCities();
 
+  console.log(cities,citiesLoading,citiesError,citiesError);
+
   // Build filter object for API
   const buildFilters = () => {
     const filters: { city?: string; crop?: string; date?: string } = {};
