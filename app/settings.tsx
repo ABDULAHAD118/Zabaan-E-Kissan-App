@@ -1,24 +1,37 @@
 import React, { useState } from "react";
-import { ScrollView, Switch, TouchableOpacity, View } from "react-native";
+import { ScrollView, Switch, TouchableOpacity, View, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
-
 import { ThemedText } from "@/components/ThemedText";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { Colors } from "@/constants/Colors";
+import {
+  getContainerStyle,
+  getHeaderStyle,
+  getSectionStyle,
+  getContentStyle,
+  getCardStyle,
+  getButtonStyle,
+  getTextStyle,
+  getColor,
+  getSpacing
+} from "@/utils/styles";
 
 type LanguageOption = {
   id: string;
   name: string;
   localName: string;
+  flag: string;
 };
 
 const languages: LanguageOption[] = [
-  { id: "en", name: "English", localName: "English" },
-  { id: "ur", name: "Urdu", localName: "اردو" },
+  { id: "en", name: "English", localName: "English", flag: "🇺🇸" },
+  { id: "ur", name: "Urdu", localName: "اردو", flag: "🇵🇰" },
 ];
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme() ?? "light";
+  const colors = Colors[colorScheme];
   const router = useRouter();
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -27,115 +40,541 @@ export default function SettingsScreen() {
   );
 
   return (
-    <View className="flex-1 bg-white dark:bg-[#1B5E20]">
-      <View className="pt-12 px-4 bg-primary-light dark:bg-primary-dark">
-        <View className="flex-row items-center mb-4">
-          <TouchableOpacity className="p-2" onPress={() => router.back()}>
-            <Ionicons size={24} name="arrow-back" color="white" />
-          </TouchableOpacity>
-          <ThemedText
-            type="title"
-            className="text-2xl font-bold text-white ml-2"
+    <View style={getContainerStyle(colorScheme)}>
+      <StatusBar 
+        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={getColor(colorScheme, 'primary')}
+      />
+      
+      {/* Header */}
+      <View style={getHeaderStyle(colorScheme)}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: getSpacing('md')
+        }}>
+          <TouchableOpacity 
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('md')
+            }}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
           >
-            Settings
-          </ThemedText>
+            <Ionicons size={20} name="arrow-back" color={getColor(colorScheme, 'primary')} />
+          </TouchableOpacity>
+          
+          <View style={{ flex: 1 }}>
+            <ThemedText style={getTextStyle(colorScheme, 'title')}>
+              Settings
+            </ThemedText>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'body'),
+              color: getColor(colorScheme, 'buttonText'),
+              opacity: 0.9
+            }}>
+              Customize your app experience
+            </ThemedText>
+          </View>
         </View>
       </View>
 
-      <ScrollView className="flex-1 px-4 pt-4">
-        <View className="mb-6">
-          <ThemedText type="subtitle" className="mb-2">
-            Language / زبان
-          </ThemedText>
+      <ScrollView style={getContentStyle(colorScheme)} showsVerticalScrollIndicator={false}>
+        {/* Language Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="language" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              Language / زبان
+            </ThemedText>
+          </View>
 
-          {languages.map((lang) => (
-            <TouchableOpacity
-              key={lang.id}
-              className={`flex-row items-center justify-between p-4 mb-2 rounded-lg ${
-                selectedLanguage === lang.id
-                  ? "bg-primary-light dark:bg-primary-dark"
-                  : "bg-gray-100 dark:bg-[#33691E]"
-              }`}
-              onPress={() => setSelectedLanguage(lang.id)}
-            >
-              <ThemedText
-                className={selectedLanguage === lang.id ? "text-white" : ""}
+          <View style={{ marginBottom: getSpacing('md') }}>
+            {languages.map((lang) => (
+              <TouchableOpacity
+                key={lang.id}
+                style={{
+                  padding: getSpacing('md'),
+                  borderRadius: 16,
+                  borderWidth: 2,
+                  marginBottom: getSpacing('sm'),
+                  backgroundColor: selectedLanguage === lang.id 
+                    ? getColor(colorScheme, 'highlight') 
+                    : getColor(colorScheme, 'surface'),
+                  borderColor: selectedLanguage === lang.id 
+                    ? getColor(colorScheme, 'primary') 
+                    : getColor(colorScheme, 'outline')
+                }}
+                onPress={() => setSelectedLanguage(lang.id)}
+                activeOpacity={0.8}
               >
-                {lang.name} ({lang.localName})
-              </ThemedText>
-              {selectedLanguage === lang.id && (
-                <Ionicons
-                  size={20}
-                  name="checkmark"
-                  color={
-                    selectedLanguage === lang.id
-                      ? "white"
-                      : colorScheme === "dark"
-                        ? "#FFFFFF"
-                        : "#000000"
-                  }
-                />
-              )}
-            </TouchableOpacity>
-          ))}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1
+                  }}>
+                    <ThemedText style={{
+                      fontSize: 24,
+                      marginRight: getSpacing('sm')
+                    }}>
+                      {lang.flag}
+                    </ThemedText>
+                    <View>
+                      <ThemedText style={{
+                        ...getTextStyle(colorScheme, 'body'),
+                        fontWeight: '600',
+                        color: getColor(colorScheme, 'text')
+                      }}>
+                        {lang.name}
+                      </ThemedText>
+                      <ThemedText style={{
+                        fontSize: 14,
+                        color: getColor(colorScheme, 'outline')
+                      }}>
+                        {lang.localName}
+                      </ThemedText>
+                    </View>
+                  </View>
+                  {selectedLanguage === lang.id && (
+                    <View style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      backgroundColor: getColor(colorScheme, 'primary'),
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Ionicons size={14} name="checkmark" color={getColor(colorScheme, 'buttonText')} />
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <View className="mb-6">
-          <ThemedText type="subtitle" className="mb-2">
-            Appearance
-          </ThemedText>
+        {/* Appearance Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="color-palette" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              Appearance
+            </ThemedText>
+          </View>
 
-          <View className="bg-gray-100 dark:bg-[#33691E] p-4 rounded-lg mb-2">
-            <View className="flex-row items-center justify-between">
-              <ThemedText>Dark Mode</ThemedText>
+          <View style={getCardStyle(colorScheme)}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                flex: 1
+              }}>
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: getColor(colorScheme, 'highlight'),
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: getSpacing('sm')
+                }}>
+                  <Ionicons name="moon" size={20} color={getColor(colorScheme, 'primary')} />
+                </View>
+                <View>
+                  <ThemedText style={{
+                    ...getTextStyle(colorScheme, 'body'),
+                    fontWeight: '600',
+                    color: getColor(colorScheme, 'text')
+                  }}>
+                    Dark Mode
+                  </ThemedText>
+                  <ThemedText style={{
+                    fontSize: 14,
+                    color: getColor(colorScheme, 'outline')
+                  }}>
+                    Switch between light and dark themes
+                  </ThemedText>
+                </View>
+              </View>
               <Switch
                 value={darkModeEnabled}
                 onValueChange={setDarkModeEnabled}
-                trackColor={{ false: "#767577", true: "#4CAF50" }}
-                thumbColor={darkModeEnabled ? "#FFFFFF" : "#f4f3f4"}
+                trackColor={{ 
+                  false: getColor(colorScheme, 'outline'), 
+                  true: getColor(colorScheme, 'primary') 
+                }}
+                thumbColor={darkModeEnabled ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'surface')}
+                ios_backgroundColor={getColor(colorScheme, 'outline')}
               />
             </View>
           </View>
         </View>
 
-        <View className="mb-6">
-          <ThemedText type="subtitle" className="mb-2">
-            Notifications
-          </ThemedText>
+        {/* Notifications Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="notifications" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              Notifications
+            </ThemedText>
+          </View>
 
-          <View className="bg-gray-100 dark:bg-[#33691E] p-4 rounded-lg mb-2">
-            <View className="flex-row items-center justify-between">
-              <ThemedText>Enable Notifications</ThemedText>
+          <View style={getCardStyle(colorScheme)}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                flex: 1
+              }}>
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: getColor(colorScheme, 'highlight'),
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: getSpacing('sm')
+                }}>
+                  <Ionicons name="notifications" size={20} color={getColor(colorScheme, 'primary')} />
+                </View>
+                <View>
+                  <ThemedText style={{
+                    ...getTextStyle(colorScheme, 'body'),
+                    fontWeight: '600',
+                    color: getColor(colorScheme, 'text')
+                  }}>
+                    Enable Notifications
+                  </ThemedText>
+                  <ThemedText style={{
+                    fontSize: 14,
+                    color: getColor(colorScheme, 'outline')
+                  }}>
+                    Get alerts for important updates
+                  </ThemedText>
+                </View>
+              </View>
               <Switch
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#767577", true: "#4CAF50" }}
-                thumbColor={notificationsEnabled ? "#FFFFFF" : "#f4f3f4"}
+                trackColor={{ 
+                  false: getColor(colorScheme, 'outline'), 
+                  true: getColor(colorScheme, 'primary') 
+                }}
+                thumbColor={notificationsEnabled ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'surface')}
+                ios_backgroundColor={getColor(colorScheme, 'outline')}
               />
             </View>
           </View>
         </View>
 
-        <View className="mb-6">
-          <ThemedText type="subtitle" className="mb-2">
-            About
-          </ThemedText>
+        {/* Data & Storage Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="cloud-download" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              Data & Storage
+            </ThemedText>
+          </View>
 
-          <View className="bg-gray-100 dark:bg-[#33691E] p-4 rounded-lg mb-2">
-            <ThemedText type="defaultSemiBold" className="mb-1">
-              Zabaan-e-Kisaan
+          <View style={{ marginBottom: getSpacing('md') }}>
+            {[
+              { icon: 'refresh', title: 'Clear Cache', subtitle: 'Free up storage space' },
+              { icon: 'download', title: 'Download Data', subtitle: 'Export your farming data' }
+            ].map((item, index) => (
+              <TouchableOpacity 
+                key={index}
+                style={getCardStyle(colorScheme)}
+                activeOpacity={0.8}
+              >
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1
+                  }}>
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: getColor(colorScheme, 'highlight'),
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: getSpacing('sm')
+                    }}>
+                      <Ionicons name={item.icon as any} size={20} color={getColor(colorScheme, 'primary')} />
+                    </View>
+                    <View>
+                      <ThemedText style={{
+                        ...getTextStyle(colorScheme, 'body'),
+                        fontWeight: '600',
+                        color: getColor(colorScheme, 'text')
+                      }}>
+                        {item.title}
+                      </ThemedText>
+                      <ThemedText style={{
+                        fontSize: 14,
+                        color: getColor(colorScheme, 'outline')
+                      }}>
+                        {item.subtitle}
+                      </ThemedText>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={getColor(colorScheme, 'outline')} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* About Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="information-circle" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              About
             </ThemedText>
-            <ThemedText className="text-gray-600 dark:text-gray-300">
-              Version 1.0.0
-            </ThemedText>
-            <ThemedText className="mt-2 text-gray-600 dark:text-gray-300">
-              A farming app with disease detection, chat, and crop price
-              features.
+          </View>
+
+          <View style={getCardStyle(colorScheme)}>
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: getSpacing('md')
+            }}>
+              <View style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: getColor(colorScheme, 'primary'),
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: getSpacing('sm')
+              }}>
+                <Ionicons name="leaf" size={24} color={getColor(colorScheme, 'buttonText')} />
+              </View>
+              <View>
+                <ThemedText style={{
+                  ...getTextStyle(colorScheme, 'heading'),
+                  color: getColor(colorScheme, 'text')
+                }}>
+                  Zabaan-e-Kisaan
+                </ThemedText>
+                <ThemedText style={{
+                  fontSize: 14,
+                  color: getColor(colorScheme, 'primary')
+                }}>
+                  Version 1.0.0
+                </ThemedText>
+              </View>
+            </View>
+            <ThemedText style={{
+              fontSize: 14,
+              lineHeight: 20,
+              color: getColor(colorScheme, 'outline')
+            }}>
+              A comprehensive farming app with AI-powered disease detection, 
+              intelligent chat assistance, and real-time crop price monitoring. 
+              Built for the farming community with love and care.
             </ThemedText>
           </View>
         </View>
 
-        <View className="h-8" />
+        {/* Support Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="help-buoy" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              Support & Feedback
+            </ThemedText>
+          </View>
+
+          <View style={{ marginBottom: getSpacing('md') }}>
+            {[
+              { icon: 'help-circle', title: 'Help Center', subtitle: 'Find answers to common questions' },
+              { icon: 'chatbubble-ellipses', title: 'Contact Us', subtitle: 'Get in touch with our team' },
+              { icon: 'star', title: 'Rate App', subtitle: 'Share your experience' },
+              { icon: 'share-social', title: 'Share App', subtitle: 'Tell friends about Zabaan-e-Kisaan' }
+            ].map((item, index) => (
+              <TouchableOpacity 
+                key={index}
+                style={getCardStyle(colorScheme)}
+                activeOpacity={0.8}
+              >
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    flex: 1
+                  }}>
+                    <View style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: getColor(colorScheme, 'highlight'),
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: getSpacing('sm')
+                    }}>
+                      <Ionicons name={item.icon as any} size={20} color={getColor(colorScheme, 'primary')} />
+                    </View>
+                    <View>
+                      <ThemedText style={{
+                        ...getTextStyle(colorScheme, 'body'),
+                        fontWeight: '600',
+                        color: getColor(colorScheme, 'text')
+                      }}>
+                        {item.title}
+                      </ThemedText>
+                      <ThemedText style={{
+                        fontSize: 14,
+                        color: getColor(colorScheme, 'outline')
+                      }}>
+                        {item.subtitle}
+                      </ThemedText>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={getColor(colorScheme, 'outline')} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={{ height: 80 }} />
       </ScrollView>
     </View>
   );

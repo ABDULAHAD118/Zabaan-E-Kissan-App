@@ -1,326 +1,586 @@
-import React, { useState, useRef, useEffect } from "react";
-import {
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Keyboard,
-  Animated,
-  ActivityIndicator,
+import React, { useState, useEffect, useRef } from "react";
+import { 
+  ScrollView, 
+  TextInput, 
+  TouchableOpacity, 
+  View, 
+  KeyboardAvoidingView,
   Platform,
+  Alert,
+  Pressable
 } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
-import {
-  AntDesign,
-  FontAwesome,
-  Ionicons,
-  MaterialIcons,
-} from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { useNavigation } from "@react-navigation/native";
-import type { DrawerNavigationProp } from "@react-navigation/drawer";
-import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Speech from "expo-speech";
+import { Colors } from "@/constants/Colors";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import * as Speech from 'expo-speech';
+// import Markdown from 'react-native-markdown-display';
+// Voice input simulation without expo-av dependency
+import { sendChatMessage } from "@/hooks/useApi";
 
-// Using regular React Native components with Tailwind classes directly
+// Simple markdown renderer function
+const renderMarkdown = (text: string, colorScheme: "light" | "dark") => {
+  // Split text into lines and process each line
+  const lines = text.split('\n');
+  
+  return (
+    <View>
+      {lines.map((line, index) => {
+        if (line.trim() === '') {
+          return <View key={index} style={{ height: 4 }} />;
+        }
+        
+        // Headers
+        if (line.startsWith('### ')) {
+          return (
+            <ThemedText key={index} style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginBottom: 4,
+              marginTop: 8,
+              color: getColor(colorScheme, 'text'),
+            }}>
+              {line.substring(4)}
+            </ThemedText>
+          );
+        } else if (line.startsWith('## ')) {
+          return (
+            <ThemedText key={index} style={{
+              fontSize: 18,
+              fontWeight: 'bold',
+              marginBottom: 6,
+              marginTop: 8,
+              color: getColor(colorScheme, 'text'),
+            }}>
+              {line.substring(3)}
+            </ThemedText>
+          );
+        } else if (line.startsWith('# ')) {
+          return (
+            <ThemedText key={index} style={{
+              fontSize: 20,
+              fontWeight: 'bold',
+              marginBottom: 8,
+              marginTop: 8,
+              color: getColor(colorScheme, 'text'),
+            }}>
+              {line.substring(2)}
+            </ThemedText>
+          );
+        } else if (line.startsWith('- ') || line.startsWith('* ')) {
+          return (
+            <View key={index} style={{ flexDirection: 'row', marginVertical: 2, paddingLeft: 8 }}>
+              <ThemedText style={{ color: getColor(colorScheme, 'text'), marginRight: 8, fontSize: 16 }}>•</ThemedText>
+              <ThemedText style={{
+                fontSize: 16,
+                color: getColor(colorScheme, 'text'),
+                flex: 1,
+                lineHeight: 22,
+              }}>
+                {line.substring(2)}
+              </ThemedText>
+            </View>
+          );
+        } else if (/^\d+\. /.test(line)) {
+          const number = line.match(/^\d+/)?.[0] || '1';
+          return (
+            <View key={index} style={{ flexDirection: 'row', marginVertical: 2, paddingLeft: 8 }}>
+              <ThemedText style={{ color: getColor(colorScheme, 'text'), marginRight: 8, fontSize: 16 }}>
+                {number}.
+              </ThemedText>
+              <ThemedText style={{
+                fontSize: 16,
+                color: getColor(colorScheme, 'text'),
+                flex: 1,
+                lineHeight: 22,
+              }}>
+                {line.replace(/^\d+\. /, '')}
+              </ThemedText>
+            </View>
+          );
+        } else {
+          // Regular text - handle bold formatting
+          const parts = line.split(/(\*\*.*?\*\*)/g);
+          return (
+            <ThemedText key={index} style={{
+              fontSize: 16,
+              color: getColor(colorScheme, 'text'),
+              lineHeight: 22,
+              marginVertical: 2,
+            }}>
+              {parts.map((part, partIndex) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return (
+                    <ThemedText key={partIndex} style={{ fontWeight: 'bold' }}>
+                      {part.slice(2, -2)}
+                    </ThemedText>
+                  );
+                }
+                return part;
+              })}
+            </ThemedText>
+          );
+        }
+      })}
+    </View>
+  );
+};
+import {
+  getContainerStyle,
+  getHeaderStyle,
+  getSectionStyle,
+  getContentStyle,
+  getCardStyle,
+  getInputStyle,
+  getButtonStyle,
+  getTextStyle,
+  getColor,
+  getSpacing
+} from "@/utils/styles";
 
-type Message = {
-  id: number;
+interface Message {
+  id: string;
   text: string;
   isUser: boolean;
-};
+  timestamp: Date;
+}
 
 export default function ChatScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const [inputText, setInputText] = useState("");
+  const colors = Colors[colorScheme];
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
-      text: "مرحبا! کیا میں آپ کی مدد کر سکتا ہوں؟ (Hello! How can I help you?)",
+      id: '1',
+      text: 'Hello! I\'m your AI farming expert. How can I help you today?',
       isUser: false,
-    },
+      timestamp: new Date()
+    }
   ]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isHolding, setIsHolding] = useState(false);
+  const [voiceInput, setVoiceInput] = useState("");
+  const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // const [recording, setRecording] = useState<Audio.Recording | null>(null);
 
-  const navigation = useNavigation<DrawerNavigationProp<{}>>();
-  const router = useRouter();
-  const scrollViewRef = useRef<ScrollView>(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  // Cleanup effect
+  // useEffect(() => {
+  //   return () => {
+  //     if (recording) {
+  //       recording.stopAndUnloadAsync();
+  //     }
+  //   };
+  // }, [recording]);
 
-  // Add keyboard listeners
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardDidShow",
-      () => {
-        setKeyboardVisible(true);
-        // Scroll to bottom when keyboard appears
-        setTimeout(() => {
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardDidHide",
-      () => {
-        setKeyboardVisible(false);
-      }
-    );
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
 
-    // Fade in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [messages]);
-
-  const sendMessage = async () => {
-    if (inputText.trim() === "") return;
-
-    // Add user message
-    const newUserMessage: Message = {
-      id: messages.length + 1,
+    const userMessage: Message = {
+      id: Date.now().toString(),
       text: inputText,
       isUser: true,
+      timestamp: new Date()
     };
 
-    setMessages([...messages, newUserMessage]);
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText("");
     setIsProcessing(true);
 
-    // Simulate response (in a real app, this would be an API call)
-    setTimeout(async () => {
-      const botResponses = [
-        "یہ ایک اچھا سوال ہے۔ (That's a good question.)",
-        "میں آپ کی مدد کرنے کے لیے یہاں ہوں۔ (I'm here to help you.)",
-        "کیا آپ مزید معلومات فراہم کر سکتے ہیں؟ (Can you provide more information?)",
-        "میں آپ کے سوال پر کام کر رہا ہوں۔ (I'm working on your question.)",
-        "یہ معلومات مفید ہو سکتی ہے۔ (This information might be helpful.)",
-      ];
-
-      const randomResponse =
-        botResponses[Math.floor(Math.random() * botResponses.length)];
-
-      const newBotMessage: Message = {
-        id: messages.length + 2,
-        text: randomResponse,
+    try {
+      const response = await sendChatMessage(currentInput,Math.random().toString(36).substring(2, 15));
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: response.response,
         isUser: false,
+        timestamp: new Date()
       };
-
-      setMessages((prevMessages) => [...prevMessages, newBotMessage]);
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Chat API error:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsProcessing(false);
-
-      // Speak the bot's response
-      await speakText(randomResponse);
-    }, 1500);
+    }
   };
 
-  // Function to speak text using expo-speech
-  const speakText = async (text: string) => {
-    try {
-      const isSpeaking = await Speech.isSpeakingAsync();
-      if (isSpeaking) {
-        await Speech.stop();
-      }
 
-      // Use Urdu voice if available
-      await Speech.speak(text, {
-        language: "ur", // Urdu language code
+  const speakText = (text: string) => {
+    try {
+      // Detect if text contains Urdu/Arabic characters
+      const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+      
+      // Stop any current speech first
+      Speech.stop();
+      
+      // Use appropriate language settings
+      const speechOptions = {
+        language: hasUrdu ? 'ur' : 'en',
         pitch: 1.0,
-        rate: 0.9,
-        onDone: () => console.log("Speech finished"),
-        onError: (error) => console.log("Speech error:", error),
-      });
+        rate: 0.8,
+        quality: 'default' as const,
+      };
+      
+      Speech.speak(text, speechOptions);
     } catch (error) {
-      console.log("Speech error:", error);
+      console.error('Speech error:', error);
+      Alert.alert('Speech Error', 'Unable to speak the text. Please try again.');
     }
   };
 
-  // Function to handle voice recognition
-  const toggleRecording = async () => {
+  const startRecording = async () => {
     try {
-      // Toggle recording state
-      setIsRecording(!isRecording);
-
-      if (!isRecording) {
-        // Start recording - in a real app, this would use a voice recognition API
-        // For now, we'll simulate with a timeout
-        Keyboard.dismiss();
-
-        // Speak a prompt to let the user know recording has started
-        await speakText("Please speak now");
-      } else {
-        // Stop recording and process
-        setIsProcessing(true);
-
-        // In a real app, this would process the recorded audio
-        // For now, we'll simulate with predefined texts
-        setTimeout(() => {
-          const voiceTexts = [
-            "کیا آپ مجھے فصل کی قیمتوں کے بارے میں بتا سکتے ہیں؟",
-            "میرے کھیت میں ٹماٹر کی فصل میں کیڑے لگ گئے ہیں",
-            "گندم کی کاشت کا بہترین وقت کیا ہے؟",
-          ];
-
-          const recognizedText =
-            voiceTexts[Math.floor(Math.random() * voiceTexts.length)];
-          setInputText(recognizedText);
-          setIsProcessing(false);
-        }, 2000);
+      // Simulate voice recording start
+      setIsRecording(true);
+      setIsHolding(true);
+      setVoiceInput(""); // Clear previous input
+      
+      // Clear any existing timeout
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
       }
-    } catch (error) {
-      console.log("Voice recognition error:", error);
-      setIsRecording(false);
-      setIsProcessing(false);
+      
+      // Auto-stop after 60 seconds if still holding
+      // @ts-ignore
+        recordingTimeoutRef.current = setTimeout(() => {
+        if (isHolding) {
+          stopRecording();
+        }
+      }, 60000);
+      
+    } catch (err) {
+      console.error('Failed to start recording', err);
+      Alert.alert('Error', 'Failed to start recording. Please try again.');
     }
   };
 
-  const openSettings = () => {
-    router.push("/settings");
+  const stopRecording = async () => {
+    try {
+      setIsRecording(false);
+      setIsHolding(false);
+      
+      // Clear timeout
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
+        recordingTimeoutRef.current = null;
+      }
+      
+      // Show prompt for user to enter their voice input
+      Alert.prompt(
+        '🎤 Voice Input Captured',
+        'Please type what you said:',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Send',
+            onPress: (text) => {
+              if (text && text.trim()) {
+                const voiceMessage = `🎤 Voice: "${text.trim()}"`;
+                
+                // Add user message
+                const userMessage: Message = {
+                  id: Date.now().toString(),
+                  text: voiceMessage,
+                  isUser: true,
+                  timestamp: new Date()
+                };
+                setMessages(prev => [...prev, userMessage]);
+                
+                // Send to API
+                setIsProcessing(true);
+                sendChatMessage(text.trim(), '123')
+                  .then(response => {
+                    const aiResponse: Message = {
+                      id: (Date.now() + 1).toString(),
+                      text: response.response,
+                      isUser: false,
+                      timestamp: new Date()
+                    };
+                    setMessages(prev => [...prev, aiResponse]);
+                  })
+                  .catch(error => {
+                    console.error('Chat API error:', error);
+                    const errorResponse: Message = {
+                      id: (Date.now() + 1).toString(),
+                      text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
+                      isUser: false,
+                      timestamp: new Date()
+                    };
+                    setMessages(prev => [...prev, errorResponse]);
+                  })
+                  .finally(() => {
+                    setIsProcessing(false);
+                  });
+              }
+            },
+          },
+        ],
+        'plain-text',
+        '', // Default text
+        'default'
+      );
+      
+    } catch (err) {
+      console.error('Failed to stop recording', err);
+      Alert.alert('Error', 'Failed to stop recording.');
+    }
   };
 
-  const openDrawer = () => {
-    navigation.openDrawer();
+  const handleVoicePressIn = () => {
+    startRecording();
+  };
+
+  const handleVoicePressOut = () => {
+    if (isRecording) {
+      stopRecording();
+    }
+  };
+
+  const handleVoiceInput = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
-    <Animated.View
-      className="flex-1 bg-white dark:bg-[#1B5E20]"
-      style={{ opacity: fadeAnim }}
+    <KeyboardAvoidingView 
+      style={getContainerStyle(colorScheme)}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Header with drawer toggle and settings */}
-      <LinearGradient
-        colors={
-          colorScheme === "dark"
-            ? ["#1B5E20", "#2E7D32"]
-            : ["#4CAF50", "#2E7D32"]
-        }
-        className="pt-12 px-4 pb-4"
-      >
-        <View className="flex-row items-center justify-between mb-2">
-          <TouchableOpacity
-            onPress={openDrawer}
-            className="p-2 rounded-full bg-opacity-20 bg-white"
-          >
-            <Ionicons name="menu" size={24} color="green" />
-          </TouchableOpacity>
-          <ThemedText
-            type="title"
-            className="text-center text-2xl font-bold text-white"
-          >
-            Chat Assistant
-          </ThemedText>
-
-          <TouchableOpacity
-            onPress={openSettings}
-            className="p-2 rounded-full bg-opacity-20 bg-white"
-          >
-            <Ionicons name="settings-outline" size={22} color="green" />
-          </TouchableOpacity>
+      {/* Header */}
+      <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('sm'),marginBottom: getSpacing('sm') }]}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: getSpacing('sm')
+        }}>
+          <View style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: getColor(colorScheme, 'highlight'),
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginRight: getSpacing('sm')
+          }}>
+            <Ionicons name="chatbubble-ellipses" size={18} color={getColor(colorScheme, 'primary')} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'title'),
+              fontSize: 30,
+              fontWeight: '600'
+            }}>
+              AI Chat Assistant
+            </ThemedText>
+          </View>
         </View>
+      </View>
 
-        <View className="bg-white bg-opacity-20 rounded-full px-4 py-2 mt-2">
-          <ThemedText className="text-center text-white">
-            Ask questions in Urdu or English
-          </ThemedText>
-        </View>
-      </LinearGradient>
 
-      {/* Chat messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        className="flex-1 px-4 pt-4"
-        contentContainerStyle={{ paddingBottom: isKeyboardVisible ? 80 : 20 }}
+      {/* Messages */}
+      <ScrollView 
+        style={getContentStyle(colorScheme)}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: getSpacing('lg') }}
       >
         {messages.map((message) => (
           <View
             key={message.id}
-            className={`mb-4 max-w-[80%] p-3 rounded-lg shadow-sm ${
-              message.isUser
-                ? "bg-primary-light dark:bg-primary-dark self-end rounded-tr-none"
-                : "bg-gray-100 dark:bg-[#33691E] self-start rounded-tl-none"
-            }`}
+            style={{
+              marginBottom: getSpacing('md'),
+              alignItems: message.isUser ? 'flex-end' : 'flex-start'
+            }}
           >
-            <ThemedText className={message.isUser ? "text-white" : ""}>
-              {message.text}
-            </ThemedText>
+            <View style={{
+              maxWidth: '80%',
+              padding: getSpacing('md'),
+              borderRadius: 20,
+              backgroundColor: message.isUser 
+                ? getColor(colorScheme, 'primary')
+                : getColor(colorScheme, 'surface'),
+              borderWidth: 1,
+              borderColor: message.isUser 
+                ? getColor(colorScheme, 'primary')
+                : getColor(colorScheme, 'outline'),
+              shadowColor: getColor(colorScheme, 'shadow'),
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}>
+              {message.isUser ? (
+                <ThemedText style={{
+                  ...getTextStyle(colorScheme, 'body'),
+                  color: getColor(colorScheme, 'buttonText'),
+                  lineHeight: 20
+                }}>
+                  {message.text}
+                </ThemedText>
+              ) : (
+                renderMarkdown(message.text, colorScheme)
+              )}
+              
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: getSpacing('sm')
+              }}>
+                <ThemedText style={{
+                  fontSize: 12,
+                  color: message.isUser 
+                    ? getColor(colorScheme, 'buttonText')
+                    : getColor(colorScheme, 'textSecondary')
+                }}>
+                  {formatTime(message.timestamp)}
+                </ThemedText>
+                
+                {!message.isUser && (
+                  <TouchableOpacity
+                    onPress={() => speakText(message.text)}
+                    style={{
+                      padding: getSpacing('xs'),
+                      marginLeft: getSpacing('sm')
+                    }}
+                  >
+                    <Ionicons 
+                      name="volume-high" 
+                      size={16} 
+                      color={getColor(colorScheme, 'textSecondary')} 
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
           </View>
         ))}
 
+        {/* Processing Indicator */}
         {isProcessing && (
-          <View className="self-start bg-gray-100 dark:bg-[#33691E] p-3 rounded-lg rounded-tl-none mb-4 max-w-[80%] flex-row items-center">
-            <ActivityIndicator
-              size="small"
-              color={colorScheme === "dark" ? "#FFFFFF" : "#4CAF50"}
-            />
-            <ThemedText className="ml-2">Processing...</ThemedText>
+          <View style={{
+            marginBottom: getSpacing('md'),
+            alignItems: 'flex-start'
+          }}>
+            <View style={{
+              padding: getSpacing('md'),
+              borderRadius: 20,
+              backgroundColor: getColor(colorScheme, 'surface'),
+              borderWidth: 1,
+              borderColor: getColor(colorScheme, 'outline'),
+              flexDirection: 'row',
+              alignItems: 'center'
+            }}>
+              <View style={{
+                width: 16,
+                height: 16,
+                borderRadius: 8,
+                backgroundColor: getColor(colorScheme, 'primary'),
+                marginRight: getSpacing('sm')
+              }} />
+              <ThemedText style={{
+                ...getTextStyle(colorScheme, 'caption'),
+                color: getColor(colorScheme, 'textSecondary')
+              }}>
+                AI is thinking...
+              </ThemedText>
+            </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Input area */}
-      <View className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <View className="flex-row items-center">
+      {/* Input Section */}
+      <View style={{
+        padding: getSpacing('md'),
+        backgroundColor: getColor(colorScheme, 'background'),
+        borderTopWidth: 1,
+        borderTopColor: getColor(colorScheme, 'outline')
+      }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center'
+        }}>
           <TextInput
-            className="flex-1 bg-gray-100 dark:bg-[#33691E] rounded-full px-4 py-3 mr-2 shadow-sm"
-            placeholder="Type your message..."
-            placeholderTextColor={
-              colorScheme === "dark" ? "#A1A1AA" : "#71717A"
-            }
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              ...getInputStyle(colorScheme),
+              marginRight: getSpacing('sm')
+            }}
+            placeholder="Ask me anything about farming..."
+            placeholderTextColor={getColor(colorScheme, 'outline')}
             value={inputText}
             onChangeText={setInputText}
-            onSubmitEditing={sendMessage}
-            multiline={Platform.OS === "ios"}
-            numberOfLines={1}
+            
+            multiline
+            maxLength={500}
           />
-
-          <TouchableOpacity
-            className={`w-12 h-12 rounded-full items-center justify-center shadow-sm ${
-              isRecording
-                ? "bg-red-500"
-                : "bg-primary-light dark:bg-primary-dark"
-            }`}
-            onPress={toggleRecording}
+          
+          <Pressable
+            style={({ pressed }) => ({
+              ...getButtonStyle(colorScheme, isRecording ? 'secondary' : 'primary'),
+              width: 35,
+              height: 35,
+              borderRadius: 24,
+              padding: 0,
+              marginRight: getSpacing('sm'),
+              backgroundColor: isRecording 
+                ? getColor(colorScheme, 'error') 
+                : pressed 
+                  ? getColor(colorScheme, 'primary')
+                  : getColor(colorScheme, 'accent'),
+              transform: [{ scale: pressed ? 0.95 : 1 }],
+            })}
+            onPressIn={handleVoicePressIn}
+            onPressOut={handleVoicePressOut}
+            disabled={isProcessing}
           >
-            {isRecording ? (
-              <MaterialIcons size={24} name="mic" color="white" />
-            ) : (
-              <FontAwesome size={22} name="microphone" color="white" />
-            )}
-          </TouchableOpacity>
-
+            <Ionicons 
+              name={isRecording ? "stop" : "mic"} 
+              size={20} 
+              color={getColor(colorScheme, 'buttonText')} 
+            />
+          </Pressable>
+          
           <TouchableOpacity
-            className="w-12 h-12 rounded-full bg-primary-light dark:bg-primary-dark items-center justify-center ml-2 shadow-sm"
-            onPress={sendMessage}
-            disabled={inputText.trim() === ""}
+            style={{
+              ...getButtonStyle(colorScheme, 'primary'),
+              width: 35,
+              height: 35,
+              borderRadius: 24,
+              padding: 0
+            }}
+            onPress={handleSend}
+            disabled={!inputText.trim() || isProcessing}
+            activeOpacity={0.7}
           >
-            <AntDesign size={22} name="arrowup" color="white" />
+            <Ionicons 
+              name="send" 
+              size={20} 
+              color={getColor(colorScheme, 'buttonText')} 
+            />
           </TouchableOpacity>
         </View>
-
-        {isRecording && (
-          <View className="mt-2 bg-red-100 dark:bg-red-900 p-2 rounded-lg items-center">
-            <ThemedText className="text-red-500 dark:text-red-200">
-              Recording... Tap mic to stop
-            </ThemedText>
-          </View>
-        )}
       </View>
-    </Animated.View>
+    </KeyboardAvoidingView>
   );
 }

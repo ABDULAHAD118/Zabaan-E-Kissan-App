@@ -1,0 +1,371 @@
+/* Global CSS for Zabaan-E-Kisaan App */
+
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+/* Typography */
+.text-title {
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.text-subtitle {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.text-heading {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.text-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-caption {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.text-small {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+/* Layout */
+.container {
+  flex: 1;
+}
+
+.header {
+  padding-top: 48px;
+  padding-horizontal: 16px;
+  padding-bottom: 16px;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+}
+
+.section {
+  padding-horizontal: 16px;
+  padding-vertical: 16px;
+}
+
+.content {
+  flex: 1;
+  padding-horizontal: 16px;
+}
+
+/* Cards */
+.card {
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-width: 1px;
+  shadow-color: #1E293B;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.05;
+  shadow-radius: 4px;
+  elevation: 2;
+}
+
+.card-large {
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Buttons */
+.button {
+  padding-horizontal: 16px;
+  padding-vertical: 12px;
+  border-radius: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-primary {
+  background-color: #059669;
+}
+
+.button-secondary {
+  background-color: #F1F5F9;
+}
+
+.button-outline {
+  border-width: 2px;
+  background-color: transparent;
+}
+
+.button-rounded {
+  border-radius: 24px;
+}
+
+.button-small {
+  padding-horizontal: 12px;
+  padding-vertical: 8px;
+}
+
+.button-large {
+  padding-horizontal: 20px;
+  padding-vertical: 16px;
+}
+
+/* Input Fields */
+.input {
+  border-radius: 12px;
+  padding-horizontal: 16px;
+  padding-vertical: 12px;
+  border-width: 1px;
+  font-size: 16px;
+}
+
+.input-rounded {
+  border-radius: 24px;
+}
+
+.input-large {
+  padding-horizontal: 20px;
+  padding-vertical: 16px;
+  font-size: 18px;
+}
+
+/* Search Bar */
+.search-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.search-input {
+  border-radius: 24px;
+  padding-horizontal: 16px;
+  padding-vertical: 12px;
+  padding-left: 48px;
+  font-size: 16px;
+  border-width: 1px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+}
+
+.search-clear {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+}
+
+/* City Filter */
+.city-filter {
+  margin-bottom: 16px;
+}
+
+.city-chip {
+  margin-right: 12px;
+  padding-horizontal: 16px;
+  padding-vertical: 8px;
+  border-radius: 20px;
+  border-width: 2px;
+}
+
+.city-chip-selected {
+  background-color: #059669;
+  border-color: #059669;
+}
+
+.city-chip-unselected {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+/* Price Cards */
+.price-card {
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  border-width: 1px;
+  shadow-color: #1E293B;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.05;
+  shadow-radius: 4px;
+  elevation: 2;
+}
+
+.price-header {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.price-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.price-location {
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.price-badge {
+  padding-horizontal: 12px;
+  padding-vertical: 8px;
+  border-radius: 12px;
+  border-width: 1px;
+}
+
+.price-info {
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.price-tap-indicator {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-width: 1px;
+}
+
+/* Status Indicators */
+.status-badge {
+  padding-horizontal: 8px;
+  padding-vertical: 4px;
+  border-radius: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-success {
+  background-color: #059669;
+}
+
+.status-warning {
+  background-color: #D97706;
+}
+
+.status-error {
+  background-color: #DC2626;
+}
+
+.status-info {
+  background-color: #3B82F6;
+}
+
+/* Loading States */
+.loading-container {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding-vertical: 80px;
+}
+
+.loading-small {
+  padding-vertical: 40px;
+}
+
+/* Empty States */
+.empty-container {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding-vertical: 80px;
+}
+
+.empty-icon {
+  margin-bottom: 16px;
+}
+
+.empty-title {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.empty-subtitle {
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Shadows */
+.shadow-sm {
+  shadow-color: #1E293B;
+  shadow-offset: 0px 1px;
+  shadow-opacity: 0.05;
+  shadow-radius: 2px;
+  elevation: 1;
+}
+
+.shadow-md {
+  shadow-color: #1E293B;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.1;
+  shadow-radius: 4px;
+  elevation: 3;
+}
+
+.shadow-lg {
+  shadow-color: #1E293B;
+  shadow-offset: 0px 4px;
+  shadow-opacity: 0.15;
+  shadow-radius: 8px;
+  elevation: 5;
+}
+
+/* Spacing */
+.space-xs { margin-bottom: 4px; }
+.space-sm { margin-bottom: 8px; }
+.space-md { margin-bottom: 16px; }
+.space-lg { margin-bottom: 24px; }
+.space-xl { margin-bottom: 32px; }
+
+.padding-xs { padding: 4px; }
+.padding-sm { padding: 8px; }
+.padding-md { padding: 16px; }
+.padding-lg { padding: 24px; }
+.padding-xl { padding: 32px; }
+
+/* Flexbox Utilities */
+.flex-row { flex-direction: row; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+
+/* Text Alignment */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+/* Font Weights */
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+
+/* Border Radius */
+.rounded-sm { border-radius: 4px; }
+.rounded-md { border-radius: 8px; }
+.rounded-lg { border-radius: 12px; }
+.rounded-xl { border-radius: 16px; }
+.rounded-2xl { border-radius: 20px; }
+.rounded-full { border-radius: 9999px; }

@@ -1,47 +1,94 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
-import { HapticTab } from "@/components/HapticTab";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Platform, View } from "react-native";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Entypo, Ionicons, FontAwesome6 } from "@expo/vector-icons";
+import { Entypo, Ionicons } from "@expo/vector-icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? "light"];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.outline + '90',
         headerShown: false,
-        tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {},
-        }),
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.outline + '30',
+          height: Platform.OS === 'ios' ? 100 : 80,
+          paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+          paddingTop: 10,
+          paddingHorizontal: 5,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+          marginTop: 4,
+          letterSpacing: 0.2,
+        },
+        tabBarIconStyle: {
+          marginTop: 0,
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Disease Detection",
-          tabBarIcon: ({ color }) => (
-            <Entypo size={28} name="leaf" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+                marginBottom:5,
+              backgroundColor: focused ? colors.primary + '30' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: focused ? 2 : 0,
+              borderColor: focused ? colors.primary + '70' : 'transparent',
+            }}>
+              <Entypo 
+                size={focused ? 24 : 22} 
+                name="leaf" 
+                color={focused ? colors.primary : color}
+                style={{
+                  transform: [{ scale: focused ? 1.1 : 1 }]
+                }}
+              />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          title: "Chat",
-          tabBarIcon: ({ color }) => (
-            <Ionicons size={28} name="chatbox" color={color} />
+          title: "AI Chat",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+                marginBottom:5,
+              backgroundColor: focused ? colors.primary + '30' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: focused ? 2 : 0,
+              borderColor: focused ? colors.primary + '70' : 'transparent',
+            }}>
+              <Ionicons 
+                size={focused ? 24 : 22} 
+                name="chatbubble-ellipses" 
+                color={focused ? colors.primary : color}
+                style={{
+                  transform: [{ scale: focused ? 1.1 : 1 }]
+                }}
+              />
+            </View>
           ),
         }}
       />
@@ -49,8 +96,27 @@ export default function TabLayout() {
         name="prices"
         options={{
           title: "Crop Prices",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 size={28} name="chart-line" color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+                marginBottom:5,
+              backgroundColor: focused ? colors.primary + '30' : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: focused ? 2 : 0,
+              borderColor: focused ? colors.primary + '70' : 'transparent',
+            }}>
+              <Ionicons 
+                size={focused ? 24 : 22} 
+                name="trending-up" 
+                color={focused ? colors.primary : color}
+                style={{
+                  transform: [{ scale: focused ? 1.1 : 1 }]
+                }}
+              />
+            </View>
           ),
         }}
       />

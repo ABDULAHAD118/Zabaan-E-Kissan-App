@@ -1,10 +1,14 @@
 {
   "expo": {
-    "name": "Zabaan-e-Kisaan",
+    "name": "Zabaan E Kisaan",
     "slug": "zabaan-e-kisaan",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": {
+      "dark": "./assets/images/icon-dark.png",
+      "light": "./assets/images/icon.png",
+      "tinted": "./assets/images/icon.png"
+    },
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -16,27 +20,33 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#4CAF50"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.abdulahad0118.zabaanekisaan"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
+          "backgroundColor": "#ffffff",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#4CAF50"
+          "imageWidth": 200
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ea2494f8-34a5-4021-bbf4-2bc4c8668497"
+      }
     }
   }
 }
