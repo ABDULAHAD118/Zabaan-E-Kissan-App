@@ -41,3 +41,4 @@ app-example
 package-lock.json
 yarn.lock
 bun.lock
+.idea
