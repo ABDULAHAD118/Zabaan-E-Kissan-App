@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { API_ENDPOINTS } from '@/env';
+import  EventSource  from 'react-native-sse';
+import { API_ENDPOINTS,ENV } from '@/env';
 
 // Types
 export type CropPrice = {
@@ -27,14 +28,23 @@ export type ChatMessage = {
 
 export type ChatResponse = {
   response: string;
-  thread_id: string;
+  field_analysis: any | null;
 };
 
+export type ChatHistoryMessage = {
+  type: 'HumanMessage' | 'AIMessage';
+  content: string;
+};
+
+export type ChatHistory = {
+  thread_id: string;
+  message_count: number;
+  messages: ChatHistoryMessage[];
+};
 // API Functions
 const fetchCities = async (): Promise<City[]> => {
   const response = await axios.get(API_ENDPOINTS.CITIES);
   const data = response.data;
-  console.log(data);
   if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
     // Convert the array of city names to the expected format
     return data.data.map((cityName: string, index: number) => ({
@@ -46,37 +56,76 @@ const fetchCities = async (): Promise<City[]> => {
   }
 };
 
+export type PricesResponse = {
+  data: CropPrice[];
+  pagination: {
+    page: number;
+    limit: number;
+    total_pages: number;
+    total_records: number;
+    returned_records: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+};
+
 const fetchPrices = async (filters?: {
   city?: string;
   crop?: string;
   date?: string;
-}): Promise<CropPrice[]> => {
+  page?: number;
+  limit?: number;
+}): Promise<PricesResponse> => {
   let url = API_ENDPOINTS.PRICES;
   const queryParams = new URLSearchParams();
-  
+
   if (filters?.city && filters.city.trim() !== '') {
     queryParams.append('city', filters.city);
   }
-  
+
   if (filters?.crop && filters.crop.trim() !== '') {
     queryParams.append('crop', filters.crop);
   }
-  
+
   if (filters?.date && filters.date.trim() !== '') {
     queryParams.append('date', filters.date);
   }
-  
+
+  // Add pagination parameters
+  if (filters?.page) {
+    queryParams.append('page', filters.page.toString());
+  }
+
+  if (filters?.limit) {
+    queryParams.append('limit', filters.limit.toString());
+  }
+
   if (queryParams.toString()) {
     url += `?${queryParams.toString()}`;
   }
-  
+
   const response = await axios.get(url);
   const data = response.data;
-  
-  if (data && data.data && Array.isArray(data.data)) {
-    return data.data;
+
+  if (data && data.data && Array.isArray(data.data) && data.pagination) {
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
   } else if (data && Array.isArray(data)) {
-    return data;
+    // Fallback for old API format
+    return {
+      data: data,
+      pagination: {
+        page: 1,
+        limit: data.length,
+        total_pages: 1,
+        total_records: data.length,
+        returned_records: data.length,
+        has_next: false,
+        has_prev: false
+      }
+    };
   } else {
     throw new Error('Invalid prices data format');
   }
@@ -100,13 +149,84 @@ const searchPricesByCity = async (cityName: string): Promise<CropPrice[]> => {
   }
 };
 
-export const sendChatMessage = async (message: string, threadId: string = '123'): Promise<ChatResponse> => {
+export const sendChatMessage = async (message: string, threadId: string = 'default-thread'): Promise<ChatResponse> => {
   const response = await axios.post(`${API_ENDPOINTS.CHAT}/${threadId}`, {
     query: message
   }, {
     headers: {
       'accept': 'application/json',
       'Content-Type': 'application/json',
+    }
+  });
+  
+  return response.data;
+};
+
+// Streaming chat message function
+export const sendChatMessageSocket = (
+    message: string,
+    threadId: string = "default-thread",
+    onChunk: (chunk: string, fullText: string) => void,
+    onComplete?: (fullText: string) => void,
+    onError?: (error: Error) => void
+) => {
+    try {
+        console.log("Connecting to:", `${ENV.SOCKET_URL}/chat/${threadId}`);
+
+        const ws = new WebSocket(`${ENV.SOCKET_URL}/chat/${threadId}`);
+
+        let fullText = ""; // This is now the single source of truth
+
+        ws.onopen = () => {
+            console.log("✅ WebSocket connected");
+            console.log("Sending message:", message);
+            ws.send(JSON.stringify({ query: message }));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                console.log("Received message:", event.data);
+                const data = JSON.parse(event.data);
+
+                // --- FIX: Logic for handling messages ---
+
+                // 1. If "response" exists, it's a chunk. Append it.
+                if (data.response) {
+                    fullText += data.response; // Backend now sends the space
+                    onChunk(data.response, fullText);
+                }
+
+                // 2. If "done" exists, it's the end.
+                if (data.done) {
+                    // Use the locally accumulated fullText
+                    onComplete?.(fullText.trim());
+                    ws.close();
+                }
+
+            } catch (err) {
+                console.error("❌ JSON parse error:", err);
+            }
+        };
+
+        ws.onerror = (error: any) => {
+            console.error("⚠️ WebSocket error:", error.message || error);
+            onError?.(new Error(error.message || "WebSocket error"));
+            ws.close();
+        };
+
+        ws.onclose = () => {
+            console.log("🔒 WebSocket closed");
+        };
+    } catch (error) {
+        console.error("Streaming setup error:", error);
+        onError?.(error as Error);
+    }
+};
+
+export const fetchChatHistory = async (threadId: string): Promise<ChatHistory> => {
+  const response = await axios.get(`${API_ENDPOINTS.CHAT}/${threadId}/history`, {
+    headers: {
+      'accept': 'application/json',
     }
   });
   
@@ -126,6 +246,8 @@ export const usePrices = (filters?: {
   city?: string;
   crop?: string;
   date?: string;
+  page?: number;
+  limit?: number;
 }) => {
   return useQuery({
     queryKey: ['prices', filters],
