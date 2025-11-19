@@ -7,16 +7,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  Pressable
 } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import * as Speech from 'expo-speech';
-// import Markdown from 'react-native-markdown-display';
-// Voice input simulation without expo-av dependency
-import { sendChatMessage } from "@/hooks/useApi";
+import {sendChatMessage, fetchChatHistory, sendChatMessageSocket} from "@/hooks/useApi";
+import LocationPicker from "@/components/LocationPicker";
+import VoiceRecorder from "@/components/VoiceRecorder";
+import { generateUUID } from "@/utils/uuid";
 
 // Simple markdown renderer function
 const renderMarkdown = (text: string, colorScheme: "light" | "dark") => {
@@ -147,7 +147,42 @@ interface Message {
 
 export default function ChatScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const colors = Colors[colorScheme];
+  const [threadId] = useState(() => {
+    const uuid = generateUUID();
+    console.log('Generated 36-character thread UUID:', uuid);
+    return uuid;
+  });
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const history = await fetchChatHistory(threadId);
+        if (history.messages && history.messages.length > 0) {
+          // Convert history messages to our Message format
+          const loadedMessages: Message[] = history.messages
+            .filter(msg => msg.type === 'HumanMessage' || msg.type === 'AIMessage')
+            .map((msg, index) => ({
+              id: `history-${index}`,
+              text: msg.content,
+              isUser: msg.type === 'HumanMessage',
+              timestamp: new Date() // You might want to parse actual timestamps from API
+            }));
+          
+          // Only set if we have messages (don't override the welcome message if empty)
+          if (loadedMessages.length > 0) {
+            setMessages(loadedMessages);
+          }
+        }
+      } catch (error) {
+        // Silently fail - history might not exist for new threads
+        console.log('No chat history found or error loading:', error);
+      }
+    };
+
+    loadHistory();
+  }, [threadId]);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -158,58 +193,114 @@ export default function ChatScreen() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isHolding, setIsHolding] = useState(false);
-  const [voiceInput, setVoiceInput] = useState("");
-  const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  // Voice recording is now handled by VoiceRecorder component
+  
+  // Location state
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [locationAddress, setLocationAddress] = useState<string>("");
+  
+  // Streaming state
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
 
-  // Cleanup effect
-  // useEffect(() => {
-  //   return () => {
-  //     if (recording) {
-  //       recording.stopAndUnloadAsync();
-  //     }
-  //   };
-  // }, [recording]);
+    const handleSend = async (useStreaming: boolean = true) => {
+        if (!inputText.trim()) return;
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
+        let queryText = inputText.trim();
+        if (locationEnabled && latitude !== null && longitude !== null) {
+            queryText = `${queryText} ${latitude} ${longitude}`;
+        }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText,
-      isUser: true,
-      timestamp: new Date()
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            text: inputText.trim(),
+            isUser: true,
+            timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, userMessage]);
+        const aiMessageId = (Date.now() + 1).toString();
+        setStreamingMessageId(aiMessageId);
+
+        setMessages((prev) => [
+            ...prev,
+            { id: aiMessageId, text: "", isUser: false, timestamp: new Date() },
+        ]);
+
+        setInputText("");
+        setIsProcessing(true);
+
+        try {
+            if (useStreaming) {
+                sendChatMessageSocket(
+                    queryText,
+                    threadId,
+                    (chunk, fullText) => {
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg.id === aiMessageId ? { ...msg, text: fullText } : msg
+                            )
+                        );
+                    },
+                    (fullText) => {
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg.id === aiMessageId ? { ...msg, text: fullText } : msg
+                            )
+                        );
+                        setIsProcessing(false);
+                        setStreamingMessageId(null);
+                    },
+                    (error) => {
+                        console.error("Streaming error:", error);
+                        setIsProcessing(false);
+                        setStreamingMessageId(null);
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg.id === aiMessageId
+                                    ? {
+                                        ...msg,
+                                        text:
+                                            "Sorry, I'm having trouble connecting to the server. Please try again later.",
+                                    }
+                                    : msg
+                            )
+                        );
+                    }
+                );
+            } else {
+                // Fallback normal API
+                const response = await sendChatMessage(queryText, threadId);
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === aiMessageId
+                            ? { ...msg, text: response.response }
+                            : msg
+                    )
+                );
+                setIsProcessing(false);
+                setStreamingMessageId(null);
+            }
+        } catch (error) {
+            console.error("Chat API error:", error);
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === aiMessageId
+                        ? {
+                            ...msg,
+                            text:
+                                "Sorry, I'm having trouble connecting to the server. Please try again later.",
+                        }
+                        : msg
+                )
+            );
+            setIsProcessing(false);
+            setStreamingMessageId(null);
+        }
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputText;
-    setInputText("");
-    setIsProcessing(true);
-
-    try {
-      const response = await sendChatMessage(currentInput,Math.random().toString(36).substring(2, 15));
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.response,
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      console.error('Chat API error:', error);
-      const errorResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
 
   const speakText = (text: string) => {
@@ -235,124 +326,7 @@ export default function ChatScreen() {
     }
   };
 
-  const startRecording = async () => {
-    try {
-      // Simulate voice recording start
-      setIsRecording(true);
-      setIsHolding(true);
-      setVoiceInput(""); // Clear previous input
-      
-      // Clear any existing timeout
-      if (recordingTimeoutRef.current) {
-        clearTimeout(recordingTimeoutRef.current);
-      }
-      
-      // Auto-stop after 60 seconds if still holding
-      // @ts-ignore
-        recordingTimeoutRef.current = setTimeout(() => {
-        if (isHolding) {
-          stopRecording();
-        }
-      }, 60000);
-      
-    } catch (err) {
-      console.error('Failed to start recording', err);
-      Alert.alert('Error', 'Failed to start recording. Please try again.');
-    }
-  };
-
-  const stopRecording = async () => {
-    try {
-      setIsRecording(false);
-      setIsHolding(false);
-      
-      // Clear timeout
-      if (recordingTimeoutRef.current) {
-        clearTimeout(recordingTimeoutRef.current);
-        recordingTimeoutRef.current = null;
-      }
-      
-      // Show prompt for user to enter their voice input
-      Alert.prompt(
-        '🎤 Voice Input Captured',
-        'Please type what you said:',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Send',
-            onPress: (text) => {
-              if (text && text.trim()) {
-                const voiceMessage = `🎤 Voice: "${text.trim()}"`;
-                
-                // Add user message
-                const userMessage: Message = {
-                  id: Date.now().toString(),
-                  text: voiceMessage,
-                  isUser: true,
-                  timestamp: new Date()
-                };
-                setMessages(prev => [...prev, userMessage]);
-                
-                // Send to API
-                setIsProcessing(true);
-                sendChatMessage(text.trim(), '123')
-                  .then(response => {
-                    const aiResponse: Message = {
-                      id: (Date.now() + 1).toString(),
-                      text: response.response,
-                      isUser: false,
-                      timestamp: new Date()
-                    };
-                    setMessages(prev => [...prev, aiResponse]);
-                  })
-                  .catch(error => {
-                    console.error('Chat API error:', error);
-                    const errorResponse: Message = {
-                      id: (Date.now() + 1).toString(),
-                      text: "Sorry, I'm having trouble connecting to the server. Please try again later.",
-                      isUser: false,
-                      timestamp: new Date()
-                    };
-                    setMessages(prev => [...prev, errorResponse]);
-                  })
-                  .finally(() => {
-                    setIsProcessing(false);
-                  });
-              }
-            },
-          },
-        ],
-        'plain-text',
-        '', // Default text
-        'default'
-      );
-      
-    } catch (err) {
-      console.error('Failed to stop recording', err);
-      Alert.alert('Error', 'Failed to stop recording.');
-    }
-  };
-
-  const handleVoicePressIn = () => {
-    startRecording();
-  };
-
-  const handleVoicePressOut = () => {
-    if (isRecording) {
-      stopRecording();
-    }
-  };
-
-  const handleVoiceInput = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  };
+  // Voice recording is now handled by VoiceRecorder component
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -393,7 +367,59 @@ export default function ChatScreen() {
               AI Chat Assistant
             </ThemedText>
           </View>
+          <TouchableOpacity
+            onPress={() => setShowLocationPicker(true)}
+            style={{
+              padding: getSpacing('xs'),
+              borderRadius: 8,
+              backgroundColor: locationEnabled 
+                ? getColor(colorScheme, 'success') 
+                : 'transparent',
+              borderWidth: 1,
+              borderColor: locationEnabled 
+                ? getColor(colorScheme, 'success')
+                : getColor(colorScheme, 'outline'),
+            }}
+          >
+            <Ionicons 
+              name={locationEnabled ? "location" : "location-outline"} 
+              size={20} 
+              color={getColor(colorScheme, 'buttonText')}
+            />
+          </TouchableOpacity>
         </View>
+        {locationEnabled && latitude !== null && longitude !== null && (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: getSpacing('xs'),
+            paddingHorizontal: getSpacing('sm'),
+            paddingVertical: getSpacing('xs'),
+            backgroundColor: getColor(colorScheme, 'surface'),
+            borderRadius: 8,
+          }}>
+            <FontAwesome5 name="map-marker-alt" size={14} color={getColor(colorScheme, 'primary')} />
+            <ThemedText style={{
+              fontSize: 12,
+              color: getColor(colorScheme, 'textSecondary'),
+              marginLeft: getSpacing('xs'),
+              flex: 1
+            }}>
+              {locationAddress || `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`}
+            </ThemedText>
+            <TouchableOpacity
+              onPress={() => {
+                setLocationEnabled(false);
+                setLatitude(null);
+                setLongitude(null);
+                setLocationAddress("");
+              }}
+              style={{ marginLeft: 'auto', padding: 4 }}
+            >
+              <Ionicons name="close-circle" size={16} color={getColor(colorScheme, 'error')} />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
 
@@ -526,7 +552,7 @@ export default function ChatScreen() {
               ...getInputStyle(colorScheme),
               marginRight: getSpacing('sm')
             }}
-            placeholder="Ask me anything about farming..."
+            placeholder="Ask anything about farming..."
             placeholderTextColor={getColor(colorScheme, 'outline')}
             value={inputText}
             onChangeText={setInputText}
@@ -535,52 +561,58 @@ export default function ChatScreen() {
             maxLength={500}
           />
           
-          <Pressable
-            style={({ pressed }) => ({
-              ...getButtonStyle(colorScheme, isRecording ? 'secondary' : 'primary'),
-              width: 35,
-              height: 35,
-              borderRadius: 24,
-              padding: 0,
-              marginRight: getSpacing('sm'),
-              backgroundColor: isRecording 
-                ? getColor(colorScheme, 'error') 
-                : pressed 
-                  ? getColor(colorScheme, 'primary')
-                  : getColor(colorScheme, 'accent'),
-              transform: [{ scale: pressed ? 0.95 : 1 }],
-            })}
-            onPressIn={handleVoicePressIn}
-            onPressOut={handleVoicePressOut}
-            disabled={isProcessing}
-          >
-            <Ionicons 
-              name={isRecording ? "stop" : "mic"} 
-              size={20} 
-              color={getColor(colorScheme, 'buttonText')} 
+          <View style={{ 
+            marginRight: getSpacing('sm'),
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <VoiceRecorder
+              onTranscript={(text) => {
+                setInputText(text);
+              }}
+              language="ur"
             />
-          </Pressable>
+          </View>
           
           <TouchableOpacity
             style={{
-              ...getButtonStyle(colorScheme, 'primary'),
+                alignItems: 'center' as const,
+                justifyContent: 'center' as const,
               width: 35,
               height: 35,
               borderRadius: 24,
-              padding: 0
+                backgroundColor:getColor(colorScheme,'primary')
             }}
-            onPress={handleSend}
+            onPress={() => handleSend(true)}
             disabled={!inputText.trim() || isProcessing}
             activeOpacity={0.7}
           >
             <Ionicons 
               name="send" 
-              size={20} 
+              size={18}
               color={getColor(colorScheme, 'buttonText')} 
             />
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Location Picker */}
+      <LocationPicker
+        visible={showLocationPicker}
+        onClose={() => setShowLocationPicker(false)}
+        onLocationSelect={(lat, lng, address) => {
+          setLatitude(lat);
+          setLongitude(lng);
+          setLocationAddress(address || '');
+          setLocationEnabled(true);
+          setShowLocationPicker(false);
+        }}
+        initialLocation={latitude !== null && longitude !== null ? {
+          latitude,
+          longitude
+        } : undefined}
+      />
+
     </KeyboardAvoidingView>
   );
 }
