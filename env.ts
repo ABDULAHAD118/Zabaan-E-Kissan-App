@@ -1,10 +1,10 @@
 // Environment Configuration
 export const ENV = {
-  // API_BASE_URL: 'http://10.101.164.213:8000',
-// SOCKET_URL:'ws://10.101.164.213:8000',
+  // API_BASE_URL: 'http://10.0.2.2:8000',
+  // SOCKET_URL:'ws://10.0.2.2:8000',
   API_BASE_URL: 'https://api.zabaan-e-kissan.me',
-SOCKET_URL:'ws://api.zabaan-e-kissan.me',
-APP_NAME: 'Zabaan-E-Kisaan',
+  SOCKET_URL: 'wss://api.zabaan-e-kissan.me',
+  APP_NAME: 'Zabaan-E-Kisaan',
   APP_VERSION: '1.0.0',
 } as const;
 

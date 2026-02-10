@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import  EventSource  from 'react-native-sse';
 import { API_ENDPOINTS,ENV } from '@/env';
+import { useEffect } from 'react';
 
 // Types
 export type CropPrice = {
@@ -55,6 +56,7 @@ const fetchCities = async (): Promise<City[]> => {
     throw new Error('Invalid cities data format');
   }
 };
+
 
 export type PricesResponse = {
   data: CropPrice[];
@@ -179,7 +181,7 @@ export const sendChatMessageSocket = (
 
         ws.onopen = () => {
             console.log("✅ WebSocket connected");
-            console.log("Sending message:", message);
+            // console.log("Sending message:", message);
             ws.send(JSON.stringify({ query: message }));
         };
 
