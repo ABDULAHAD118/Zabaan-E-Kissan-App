@@ -34,20 +34,9 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#ffffff",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow Zabaan-E-Kisaan to use your location for field analysis."
-        }
-      ],
-      [
-        "expo-audio",
-        {
-          "microphonePermission": "Allow Zabaan-E-Kisaan to access your microphone for voice input."
+          "image": "./assets/images/splash.png",
+          "resizeMode": "contain"
+          
         }
       ]
     ],
@@ -57,7 +46,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "ea2494f8-34a5-4021-bbf4-2bc4c8668497"
+        "projectId": "83838cc1-9992-4053-b72b-a4353b7170a8"
       }
     }
   }

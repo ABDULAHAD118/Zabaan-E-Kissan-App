@@ -15,116 +15,8 @@ import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import * as Speech from 'expo-speech';
 import {sendChatMessage, fetchChatHistory, sendChatMessageSocket} from "@/hooks/useApi";
 import LocationPicker from "@/components/LocationPicker";
-import VoiceRecorder from "@/components/VoiceRecorder";
+// import VoiceRecorder from "@/components/VoiceRecorder";
 import { generateUUID } from "@/utils/uuid";
-
-// Simple markdown renderer function
-const renderMarkdown = (text: string, colorScheme: "light" | "dark") => {
-  // Split text into lines and process each line
-  const lines = text.split('\n');
-  
-  return (
-    <View>
-      {lines.map((line, index) => {
-        if (line.trim() === '') {
-          return <View key={index} style={{ height: 4 }} />;
-        }
-        
-        // Headers
-        if (line.startsWith('### ')) {
-          return (
-            <ThemedText key={index} style={{
-              fontSize: 16,
-              fontWeight: 'bold',
-              marginBottom: 4,
-              marginTop: 8,
-              color: getColor(colorScheme, 'text'),
-            }}>
-              {line.substring(4)}
-            </ThemedText>
-          );
-        } else if (line.startsWith('## ')) {
-          return (
-            <ThemedText key={index} style={{
-              fontSize: 18,
-              fontWeight: 'bold',
-              marginBottom: 6,
-              marginTop: 8,
-              color: getColor(colorScheme, 'text'),
-            }}>
-              {line.substring(3)}
-            </ThemedText>
-          );
-        } else if (line.startsWith('# ')) {
-          return (
-            <ThemedText key={index} style={{
-              fontSize: 20,
-              fontWeight: 'bold',
-              marginBottom: 8,
-              marginTop: 8,
-              color: getColor(colorScheme, 'text'),
-            }}>
-              {line.substring(2)}
-            </ThemedText>
-          );
-        } else if (line.startsWith('- ') || line.startsWith('* ')) {
-          return (
-            <View key={index} style={{ flexDirection: 'row', marginVertical: 2, paddingLeft: 8 }}>
-              <ThemedText style={{ color: getColor(colorScheme, 'text'), marginRight: 8, fontSize: 16 }}>•</ThemedText>
-              <ThemedText style={{
-                fontSize: 16,
-                color: getColor(colorScheme, 'text'),
-                flex: 1,
-                lineHeight: 22,
-              }}>
-                {line.substring(2)}
-              </ThemedText>
-            </View>
-          );
-        } else if (/^\d+\. /.test(line)) {
-          const number = line.match(/^\d+/)?.[0] || '1';
-          return (
-            <View key={index} style={{ flexDirection: 'row', marginVertical: 2, paddingLeft: 8 }}>
-              <ThemedText style={{ color: getColor(colorScheme, 'text'), marginRight: 8, fontSize: 16 }}>
-                {number}.
-              </ThemedText>
-              <ThemedText style={{
-                fontSize: 16,
-                color: getColor(colorScheme, 'text'),
-                flex: 1,
-                lineHeight: 22,
-              }}>
-                {line.replace(/^\d+\. /, '')}
-              </ThemedText>
-            </View>
-          );
-        } else {
-          // Regular text - handle bold formatting
-          const parts = line.split(/(\*\*.*?\*\*)/g);
-          return (
-            <ThemedText key={index} style={{
-              fontSize: 16,
-              color: getColor(colorScheme, 'text'),
-              lineHeight: 22,
-              marginVertical: 2,
-            }}>
-              {parts.map((part, partIndex) => {
-                if (part.startsWith('**') && part.endsWith('**')) {
-                  return (
-                    <ThemedText key={partIndex} style={{ fontWeight: 'bold' }}>
-                      {part.slice(2, -2)}
-                    </ThemedText>
-                  );
-                }
-                return part;
-              })}
-            </ThemedText>
-          );
-        }
-      })}
-    </View>
-  );
-};
 import {
   getContainerStyle,
   getHeaderStyle,
@@ -138,6 +30,7 @@ import {
   getSpacing
 } from "@/utils/styles";
 
+
 interface Message {
   id: string;
   text: string;
@@ -147,6 +40,10 @@ interface Message {
 
 export default function ChatScreen() {
   const colorScheme = useColorScheme() ?? "light";
+   const [hasPermission, setHasPermission] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [text, setText] = useState('');
+
   const [threadId] = useState(() => {
     const uuid = generateUUID();
     console.log('Generated 36-character thread UUID:', uuid);
@@ -193,7 +90,7 @@ export default function ChatScreen() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  // Voice recording is now handled by VoiceRecorder component
+
   
   // Location state
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -205,103 +102,101 @@ export default function ChatScreen() {
   // Streaming state
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
 
-    const handleSend = async (useStreaming: boolean = true) => {
-        if (!inputText.trim()) return;
+  const handleSend = async (useStreaming: boolean = true) => {
+      if (!inputText.trim()) return;
 
-        let queryText = inputText.trim();
-        if (locationEnabled && latitude !== null && longitude !== null) {
-            queryText = `${queryText} ${latitude} ${longitude}`;
-        }
+      let queryText = inputText.trim();
+      if (locationEnabled && latitude !== null && longitude !== null) {
+          queryText = `${queryText} ${latitude} ${longitude}`;
+      }
 
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            text: inputText.trim(),
-            isUser: true,
-            timestamp: new Date(),
-        };
+      const userMessage: Message = {
+          id: Date.now().toString(),
+          text: inputText.trim(),
+          isUser: true,
+          timestamp: new Date(),
+      };
 
-        setMessages((prev) => [...prev, userMessage]);
-        const aiMessageId = (Date.now() + 1).toString();
-        setStreamingMessageId(aiMessageId);
+      setMessages((prev) => [...prev, userMessage]);
+      const aiMessageId = (Date.now() + 1).toString();
+      setStreamingMessageId(aiMessageId);
 
-        setMessages((prev) => [
-            ...prev,
-            { id: aiMessageId, text: "", isUser: false, timestamp: new Date() },
-        ]);
+      setMessages((prev) => [
+          ...prev,
+          { id: aiMessageId, text: "", isUser: false, timestamp: new Date() },
+      ]);
 
-        setInputText("");
-        setIsProcessing(true);
+      setInputText("");
+      setIsProcessing(true);
 
-        try {
-            if (useStreaming) {
-                sendChatMessageSocket(
-                    queryText,
-                    threadId,
-                    (chunk, fullText) => {
-                        setMessages((prev) =>
-                            prev.map((msg) =>
-                                msg.id === aiMessageId ? { ...msg, text: fullText } : msg
-                            )
-                        );
-                    },
-                    (fullText) => {
-                        setMessages((prev) =>
-                            prev.map((msg) =>
-                                msg.id === aiMessageId ? { ...msg, text: fullText } : msg
-                            )
-                        );
-                        setIsProcessing(false);
-                        setStreamingMessageId(null);
-                    },
-                    (error) => {
-                        console.error("Streaming error:", error);
-                        setIsProcessing(false);
-                        setStreamingMessageId(null);
-                        setMessages((prev) =>
-                            prev.map((msg) =>
-                                msg.id === aiMessageId
-                                    ? {
-                                        ...msg,
-                                        text:
-                                            "Sorry, I'm having trouble connecting to the server. Please try again later.",
-                                    }
-                                    : msg
-                            )
-                        );
-                    }
-                );
-            } else {
-                // Fallback normal API
-                const response = await sendChatMessage(queryText, threadId);
-                setMessages((prev) =>
-                    prev.map((msg) =>
-                        msg.id === aiMessageId
-                            ? { ...msg, text: response.response }
-                            : msg
-                    )
-                );
-                setIsProcessing(false);
-                setStreamingMessageId(null);
-            }
-        } catch (error) {
-            console.error("Chat API error:", error);
-            setMessages((prev) =>
-                prev.map((msg) =>
-                    msg.id === aiMessageId
-                        ? {
-                            ...msg,
-                            text:
-                                "Sorry, I'm having trouble connecting to the server. Please try again later.",
-                        }
-                        : msg
-                )
-            );
-            setIsProcessing(false);
-            setStreamingMessageId(null);
-        }
-    };
-
-
+      try {
+          if (useStreaming) {
+              sendChatMessageSocket(
+                  queryText,
+                  threadId,
+                  (chunk, fullText) => {
+                      setMessages((prev) =>
+                          prev.map((msg) =>
+                              msg.id === aiMessageId ? { ...msg, text: fullText } : msg
+                          )
+                      );
+                  },
+                  (fullText) => {
+                      setMessages((prev) =>
+                          prev.map((msg) =>
+                              msg.id === aiMessageId ? { ...msg, text: fullText } : msg
+                          )
+                      );
+                      setIsProcessing(false);
+                      setStreamingMessageId(null);
+                  },
+                  (error) => {
+                      console.error("Streaming error:", error);
+                      setIsProcessing(false);
+                      setStreamingMessageId(null);
+                      setMessages((prev) =>
+                          prev.map((msg) =>
+                              msg.id === aiMessageId
+                                  ? {
+                                      ...msg,
+                                      text:
+                                          "Sorry, I'm having trouble connecting to the server. Please try again later.",
+                                  }
+                                  : msg
+                          )
+                      );
+                  }
+              );
+          } else {
+              // Fallback normal API
+              const response = await sendChatMessage(queryText, threadId);
+              setMessages((prev) =>
+                  prev.map((msg) =>
+                      msg.id === aiMessageId
+                          ? { ...msg, text: response.response }
+                          : msg
+                  )
+              );
+              setIsProcessing(false);
+              setStreamingMessageId(null);
+          }
+      } catch (error) {
+          console.error("Chat API error:", error);
+          setMessages((prev) =>
+              prev.map((msg) =>
+                  msg.id === aiMessageId
+                      ? {
+                          ...msg,
+                          text:
+                              "Sorry, I'm having trouble connecting to the server. Please try again later.",
+                      }
+                      : msg
+              )
+          );
+          setIsProcessing(false);
+          setStreamingMessageId(null);
+      }
+  };
 
   const speakText = (text: string) => {
     try {
@@ -326,14 +221,13 @@ export default function ChatScreen() {
     }
   };
 
-  // Voice recording is now handled by VoiceRecorder component
-
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
+
 
   return (
     <KeyboardAvoidingView 
@@ -463,7 +357,9 @@ export default function ChatScreen() {
                   {message.text}
                 </ThemedText>
               ) : (
-                renderMarkdown(message.text, colorScheme)
+                <ThemedText>
+                  {message.text}
+                </ThemedText>
               )}
               
               <View style={{
@@ -560,20 +456,19 @@ export default function ChatScreen() {
             multiline
             maxLength={500}
           />
-          
-          <View style={{ 
+
+          <View style={{
             marginRight: getSpacing('sm'),
             justifyContent: 'center',
             alignItems: 'center'
           }}>
-            <VoiceRecorder
+            {/* <VoiceRecorder
               onTranscript={(text) => {
                 setInputText(text);
               }}
-              language="ur"
-            />
+            /> */}
           </View>
-          
+
           <TouchableOpacity
             style={{
                 alignItems: 'center' as const,
