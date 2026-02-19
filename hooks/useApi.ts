@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import  EventSource  from 'react-native-sse';
 import { API_ENDPOINTS,ENV } from '@/env';
-import { useEffect } from 'react';
 
 // Types
 export type CropPrice = {
@@ -276,70 +274,4 @@ export const filterCropsWithPrices = (crops: CropPrice[]): CropPrice[] => {
     // Show crops that have either min_price or max_price that's not "-"
     return crop.min_price !== '-' || crop.max_price !== '-';
   });
-};
-
-// Price conversion utilities
-export const convertPrice = (price: string, fromUnit: '100kg' | '40kg' | '1kg', toUnit: '100kg' | '40kg' | '1kg'): string => {
-  if (price === '-' || !price) return '-';
-  
-  const numericPrice = parseFloat(price);
-  if (isNaN(numericPrice)) return '-';
-  
-  // Convert to base unit (100kg)
-  let basePrice: number;
-  switch (fromUnit) {
-    case '100kg':
-      basePrice = numericPrice;
-      break;
-    case '40kg':
-      basePrice = (numericPrice / 40) * 100;
-      break;
-    case '1kg':
-      basePrice = numericPrice * 100;
-      break;
-    default:
-      return price;
-  }
-  
-  // Convert from base unit to target unit
-  let convertedPrice: number;
-  switch (toUnit) {
-    case '100kg':
-      convertedPrice = basePrice;
-      break;
-    case '40kg':
-      convertedPrice = (basePrice / 100) * 40;
-      break;
-    case '1kg':
-      convertedPrice = basePrice / 100;
-      break;
-    default:
-      return price;
-  }
-  
-  return convertedPrice.toFixed(2);
-};
-
-// Get price display in kg only - show only min/max
-export const getKgPriceDisplay = (minPrice: string, maxPrice: string): {
-  minKg: string;
-  maxKg: string;
-  hasValidPrices: boolean;
-} => {
-  if (minPrice === '-' && maxPrice === '-') {
-    return {
-      minKg: '-',
-      maxKg: '-',
-      hasValidPrices: false
-    };
-  }
-  
-  const minKg = minPrice === '-' ? '-' : convertPrice(minPrice, '100kg', '1kg');
-  const maxKg = maxPrice === '-' ? '-' : convertPrice(maxPrice, '100kg', '1kg');
-  
-  return {
-    minKg,
-    maxKg,
-    hasValidPrices: minKg !== '-' || maxKg !== '-'
-  };
 };

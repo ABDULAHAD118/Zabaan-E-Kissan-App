@@ -1,10 +1,10 @@
 import React from "react";
-import { ScrollView, TouchableOpacity, View, StatusBar } from "react-native";
+import { ScrollView, TouchableOpacity, View, StatusBar, Share, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { getKgPriceDisplay, convertPrice } from "@/hooks/useApi";
+import { getUrduCropName, getUrduCityName, getDisplayPrice } from "@/utils/helper";
 import {
   getContainerStyle,
   getHeaderStyle,
@@ -16,18 +16,7 @@ import {
   getColor,
   getSpacing
 } from "@/utils/styles";
-
-interface CropData {
-  _id: string;
-  city: string;
-  date: string;
-  crop: string;
-  min_price: string;
-  max_price: string;
-  fqp: string;
-  quantity: string;
-  scraped_at: string;
-}
+import { CropPrice } from "@/hooks/useApi";
 
 export default function CropDetailScreen() {
   const colorScheme = useColorScheme() ?? "light";
@@ -35,64 +24,32 @@ export default function CropDetailScreen() {
   const params = useLocalSearchParams();
   
   // Parse crop data from URL params
-  const cropData: CropData = JSON.parse(decodeURIComponent(params.crop as string));
+  const cropData: CropPrice = JSON.parse(decodeURIComponent(params.crop as string));
 
-  // Format date
-  const formatDate = (dateString: string) => {
+  // Get price display using helper (matches prices page - shows per kg for 100KG crops)
+  const priceData = getDisplayPrice(cropData);
+  const minDisplay = (cropData.min_price === '-' || Number.isNaN(Number(priceData.min))) ? 'دستیاب نہیں' : `Rs. ${priceData.min}`;
+  const maxDisplay = (cropData.max_price === '-' || Number.isNaN(Number(priceData.max))) ? 'دستیاب نہیں' : `Rs. ${priceData.max}`;
+  const mainPriceDisplay = (minDisplay === 'دستیاب نہیں' && maxDisplay === 'دستیاب نہیں') 
+    ? 'دستیاب نہیں' 
+    : minDisplay === maxDisplay 
+      ? `${minDisplay} ${priceData.unitLabel}`.trim()
+      : `${minDisplay} - ${maxDisplay} ${priceData.unitLabel}`.trim();
+
+  const handleShare = async () => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
+      const shareMessage = `${getUrduCropName(cropData.crop)} - ${getUrduCityName(cropData.city)}\nقیمت: ${mainPriceDisplay}\nتاریخ: ${cropData.date}`;
+      const result = await Share.share({
+        message: shareMessage,
+        title: 'زرعی منڈی کی قیمت - Zabaan-e-Kisaan',
       });
-    } catch {
-      return dateString;
+      if (result.action === Share.sharedAction) {
+        // Shared successfully
+      }
+    } catch (error) {
+        console.log(error);
+      Alert.alert('خطا', 'شیئر کرنے میں مسئلہ پیش آیا۔ دوبارہ کوشش کریں۔');
     }
-  };
-
-  // Format time
-  const formatTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return 'N/A';
-    }
-  };
-
-  // Get price display in kg
-  const getPriceDisplay = (minPrice: string, maxPrice: string) => {
-    const priceData = getKgPriceDisplay(minPrice, maxPrice);
-    
-    if (!priceData.hasValidPrices) {
-      return 'Not Available';
-    }
-    
-    if (priceData.minKg === '-') {
-      return `Rs. ${priceData.maxKg}/kg`;
-    }
-    if (priceData.maxKg === '-') {
-      return `Rs. ${priceData.minKg}/kg`;
-    }
-    return `Rs. ${priceData.minKg} - ${priceData.maxKg}/kg`;
-  };
-
-  // Get crop name without number prefix
-  const getCleanCropName = (cropString: string) => {
-    return cropString.replace(/^\d+/, '').trim();
-  };
-
-  // Get price trend
-  const getPriceTrend = () => {
-    if (cropData.min_price === '-' || cropData.max_price === '-') {
-      return 'stable';
-    }
-    // Simple logic - in real app, you'd compare with historical data
-    return Math.random() > 0.5 ? 'up' : 'down';
   };
 
   return (
@@ -127,14 +84,14 @@ export default function CropDetailScreen() {
           
           <View style={{ flex: 1 }}>
             <ThemedText style={getTextStyle(colorScheme, 'title')}>
-              Crop Details
+              فصل کی تفصیلات
             </ThemedText>
             <ThemedText style={{
               ...getTextStyle(colorScheme, 'body'),
               color: getColor(colorScheme, 'buttonText'),
               opacity: 0.9
             }}>
-              Market information and insights
+              مارکیٹ کی معلومات اور بصیرت
             </ThemedText>
           </View>
         </View>
@@ -164,7 +121,7 @@ export default function CropDetailScreen() {
                 ...getTextStyle(colorScheme, 'title'),
                 color: getColor(colorScheme, 'text')
               }}>
-                {getCleanCropName(cropData.crop)}
+                {getUrduCropName(cropData.crop)}
               </ThemedText>
               <View style={{
                 flexDirection: 'row',
@@ -177,7 +134,7 @@ export default function CropDetailScreen() {
                   fontSize: 16,
                   color: getColor(colorScheme, 'outline')
                 }}>
-                  {cropData.city}
+                  {getUrduCityName(cropData.city)}
                 </ThemedText>
               </View>
             </View>
@@ -197,14 +154,14 @@ export default function CropDetailScreen() {
               color: getColor(colorScheme, 'primary'),
               marginBottom: getSpacing('xs')
             }}>
-              Current Market Price (per kg)
+              موجودہ مارکیٹ قیمت ({priceData.unitLabel})
             </ThemedText>
             <ThemedText style={{
               fontSize: 24,
               fontWeight: 'bold',
               color: getColor(colorScheme, 'primary')
             }}>
-              {getPriceDisplay(cropData.min_price, cropData.max_price)}
+              {mainPriceDisplay}
             </ThemedText>
           </View>
         </View>
@@ -232,34 +189,25 @@ export default function CropDetailScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              Price Information
+              قیمت کی معلومات
             </ThemedText>
           </View>
 
           <View style={{ marginBottom: getSpacing('md') }}>
-            {(() => {
-              const priceData = getKgPriceDisplay(cropData.min_price, cropData.max_price);
-              return [
+            {[
               { 
-                  label: 'Minimum Price (per kg)', 
-                  value: priceData.minKg !== '-' ? `Rs. ${priceData.minKg}/kg` : 'Not Available',
+                label: 'کم از کم قیمت (' + priceData.unitLabel + ')', 
+                value: minDisplay,
                 icon: 'arrow-down',
                 color: getColor(colorScheme, 'success')
               },
               { 
-                  label: 'Maximum Price (per kg)', 
-                  value: priceData.maxKg !== '-' ? `Rs. ${priceData.maxKg}/kg` : 'Not Available',
+                label: 'زیادہ سے زیادہ قیمت (' + priceData.unitLabel + ')', 
+                value: maxDisplay,
                 icon: 'arrow-up',
                 color: getColor(colorScheme, 'warning')
-              },
-              { 
-                label: 'Price Trend', 
-                value: getPriceTrend() === 'up' ? 'Rising' : 'Falling',
-                icon: getPriceTrend() === 'up' ? 'trending-up' : 'trending-down',
-                color: getPriceTrend() === 'up' ? getColor(colorScheme, 'success') : getColor(colorScheme, 'error')
               }
-              ];
-            })().map((item, index) => (
+            ].map((item, index) => (
               <View
                 key={index}
                 style={{
@@ -267,7 +215,7 @@ export default function CropDetailScreen() {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   paddingVertical: getSpacing('sm'),
-                  borderBottomWidth: index === 2 ? 0 : 1,
+                  borderBottomWidth: index === 1 ? 0 : 1,
                   borderBottomColor: getColor(colorScheme, 'outline')
                 }}
               >
@@ -297,85 +245,7 @@ export default function CropDetailScreen() {
           </View>
         </View>
 
-        {/* Market Details */}
-        <View style={getCardStyle(colorScheme)}>
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: getSpacing('md')
-          }}>
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: getColor(colorScheme, 'highlight'),
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginRight: getSpacing('sm')
-            }}>
-              <MaterialIcons name="store" size={18} color={getColor(colorScheme, 'primary')} />
-            </View>
-            <ThemedText style={{
-              ...getTextStyle(colorScheme, 'subtitle'),
-              fontWeight: '600',
-              color: getColor(colorScheme, 'text')
-            }}>
-              Market Details
-            </ThemedText>
-          </View>
-
-          <View style={{ marginBottom: getSpacing('md') }}>
-            {[
-          
-              { 
-                label: 'FQP (Fair Quality Price)', 
-                value: cropData.fqp !== '-' ? `Rs. ${convertPrice(cropData.fqp, '100kg', '1kg')}/kg` : 'Not Available',
-                icon: 'star',
-                color: getColor(colorScheme, 'accent')
-              },
-              { 
-                label: 'Market Date', 
-                value: formatDate(cropData.scraped_at),
-                icon: 'calendar-month',
-                color: getColor(colorScheme, 'primary')
-              }
-            ].map((item, index) => (
-              <View
-                key={index}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingVertical: getSpacing('sm'),
-                  borderBottomWidth: index === 2 ? 0 : 1,
-                  borderBottomColor: getColor(colorScheme, 'outline')
-                }}
-              >
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  flex: 1
-                }}>
-                  <MaterialIcons name={item.icon as any} size={20} color={item.color} />
-                  <ThemedText style={{
-                    marginLeft: getSpacing('sm'),
-                    fontSize: 16,
-                    color: getColor(colorScheme, 'text')
-                  }}>
-                    {item.label}
-                  </ThemedText>
-                </View>
-                <ThemedText style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: getColor(colorScheme, 'text')
-                }}>
-                  {item.value}
-                </ThemedText>
-              </View>
-            ))}
-          </View>
-        </View>
+        
 
         {/* Data Information */}
         <View style={getCardStyle(colorScheme)}>
@@ -400,7 +270,7 @@ export default function CropDetailScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              Data Information
+              ڈیٹا کی معلومات
             </ThemedText>
           </View>
 
@@ -411,26 +281,14 @@ export default function CropDetailScreen() {
             borderWidth: 1,
             borderColor: getColor(colorScheme, 'outline')
           }}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginBottom: getSpacing('sm')
-            }}>
-              <MaterialIcons name="schedule" size={16} color={getColor(colorScheme, 'outline')} />
-              <ThemedText style={{
-                marginLeft: getSpacing('xs'),
-                fontSize: 14,
-                color: getColor(colorScheme, 'outline')
-              }}>
-                Last Updated: {formatDate(cropData.scraped_at)} at {formatTime(cropData.scraped_at)}
-              </ThemedText>
-            </View>
+          
             <ThemedText style={{
               fontSize: 14,
               lineHeight: 20,
-              color: getColor(colorScheme, 'outline')
+              color: getColor(colorScheme, 'outline'),
+              textAlign: 'right'
             }}>
-              This data is automatically updated from official market sources to ensure accuracy and reliability.
+              یہ ڈیٹا درستگی اور قابل اعتمادیت یقینی بنانے کے لیے سرکاری مارکیٹ ذرائع سے خودکار طور پر اپڈیٹ ہوتا ہے۔
             </ThemedText>
           </View>
         </View>
@@ -458,7 +316,7 @@ export default function CropDetailScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              Market Insights
+              مارکیٹ کی بصیرتیں
             </ThemedText>
           </View>
 
@@ -475,67 +333,33 @@ export default function CropDetailScreen() {
               color: getColor(colorScheme, 'primary'),
               textAlign: 'center'
             }}>
-              💡 Market prices are influenced by seasonal demand, weather conditions, and supply availability. 
-              Consider these factors when planning your crop sales.
+              💡 مارکیٹ کی قیمتیں موسمی طلب، موسمی حالات اور رسد کی دستیابی سے متاثر ہوتی ہیں۔ اپنی فصل کی فروخت کی منصوبہ بندی کرتے وقت ان عوامل کو مدنظر رکھیں۔
             </ThemedText>
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {/* Share Button */}
         <View style={getSectionStyle(colorScheme)}>
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginBottom: getSpacing('md')
-          }}>
-            <TouchableOpacity
-              style={{
-                ...getButtonStyle(colorScheme, 'outline'),
-                flex: 1,
-                marginRight: getSpacing('sm')
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Ionicons name="share-outline" size={20} color={getColor(colorScheme, 'primary')} />
-                <ThemedText style={{
-                  marginLeft: getSpacing('xs'),
-                  color: getColor(colorScheme, 'primary'),
-                  fontWeight: '600'
-                }}>
-                  Share
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                ...getButtonStyle(colorScheme, 'primary'),
-                flex: 1,
-                marginLeft: getSpacing('sm')
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Ionicons name="chatbubble-outline" size={20} color={getColor(colorScheme, 'buttonText')} />
-                <ThemedText style={{
-                  marginLeft: getSpacing('xs'),
-                  color: getColor(colorScheme, 'buttonText'),
-                  fontWeight: '600'
-                }}>
-                  Ask AI
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={{
+              ...getButtonStyle(colorScheme, 'primary'),
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              paddingVertical: getSpacing('md')
+            }}
+            onPress={handleShare}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="share-outline" size={20} color={getColor(colorScheme, 'buttonText')} />
+            <ThemedText style={{
+              marginLeft: getSpacing('xs'),
+              color: getColor(colorScheme, 'buttonText'),
+              fontWeight: '600'
+            }}>
+              شیئر کریں
+            </ThemedText>
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 80 }} />

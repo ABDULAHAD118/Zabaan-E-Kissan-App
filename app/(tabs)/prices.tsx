@@ -1,13 +1,14 @@
 import React, {useEffect, useState} from "react";
 import {
     ScrollView,
-    TextInput,
     TouchableOpacity,
     View,
     ActivityIndicator,
     RefreshControl,
     Modal,
-    FlatList
+    FlatList,
+    Platform,
+    StatusBar
 } from "react-native";
 import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
@@ -16,9 +17,7 @@ import { Ionicons, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import {
     useCities,
     usePrices,
-    useSearchPrices,
     filterCropsWithPrices,
-    getKgPriceDisplay,
     type CropPrice
 } from "@/hooks/useApi";
 import {
@@ -26,28 +25,27 @@ import {
     getHeaderStyle,
     getSectionStyle,
     getCardStyle,
-    getSearchInputStyle,
     getCityChipStyle,
     getPriceCardStyle,
     getTextStyle,
     getColor,
     getSpacing
 } from "@/utils/styles";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { getCleanCropName, getDisplayPrice, getUrduCityName, getUrduCropName } from "@/utils/helper";
 
 export default function PricesScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme() ?? "light";
     const [selectedCity, setSelectedCity] = useState<string>("");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-
-    // Enhanced filter states
     const [selectedCrop, setSelectedCrop] = useState<string>("");
     const [selectedDateRange, setSelectedDateRange] = useState<string>("");
+    const [selectedSpecificDate, setSelectedSpecificDate] = useState<Date | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [showCropModal, setShowCropModal] = useState(false);
     const [showDateModal, setShowDateModal] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [tempPickerDate, setTempPickerDate] = useState<Date>(new Date());
     const [availableCrops, setAvailableCrops] = useState<string[]>([]);
 
     // Pagination state
@@ -78,23 +76,28 @@ export default function PricesScreen() {
         }
 
         if (selectedDateRange) {
-            const today = new Date();
             let dateString = '';
+            const formatDateForApi = (d: Date) => d.toLocaleDateString('en-GB').replace(/\//g, '-');
 
-            switch (selectedDateRange) {
-                case 'today':
-                    dateString = today.toLocaleDateString('en-GB').replace(/\//g, '-');
-                    break;
-                case 'week':
-                    const weekAgo = new Date(today);
-                    weekAgo.setDate(today.getDate() - 7);
-                    dateString = weekAgo.toLocaleDateString('en-GB').replace(/\//g, '-');
-                    break;
-                case 'month':
-                    const monthAgo = new Date(today);
-                    monthAgo.setMonth(today.getMonth() - 1);
-                    dateString = monthAgo.toLocaleDateString('en-GB').replace(/\//g, '-');
-                    break;
+            if (selectedDateRange === 'specific' && selectedSpecificDate) {
+                dateString = formatDateForApi(selectedSpecificDate);
+            } else {
+                const today = new Date();
+                switch (selectedDateRange) {
+                    case 'today':
+                        dateString = formatDateForApi(today);
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(today);
+                        weekAgo.setDate(today.getDate() - 7);
+                        dateString = formatDateForApi(weekAgo);
+                        break;
+                    case 'month':
+                        const monthAgo = new Date(today);
+                        monthAgo.setMonth(today.getMonth() - 1);
+                        dateString = formatDateForApi(monthAgo);
+                        break;
+                }
             }
 
             if (dateString) {
@@ -115,92 +118,56 @@ export default function PricesScreen() {
         refetch: refetchPrices
     } = usePrices(buildFilters());
 
-    const {
-        data: searchResults = [],
-        isLoading: searchLoading,
-        refetch: refetchSearch
-    } = useSearchPrices(searchQuery);
-
     // Extract data and pagination from response
     const cropPrices = pricesResponse?.data || [];
     const pagination = pricesResponse?.pagination;
 
     // Filter crops with prices only - but be less restrictive
     const filteredPrices = filterCropsWithPrices(cropPrices);
-    const filteredSearchResults = filterCropsWithPrices(searchResults);
 
     // Extract unique crops from all prices for the crop filter
     useEffect(() => {
-        const allPrices = searchQuery ? filteredSearchResults : filteredPrices;
-        const uniqueCrops = Array.from(
-            new Set(allPrices.map(crop => getCleanCropName(crop.crop)))
-        ).sort();
-
-        setAvailableCrops(prev =>
-            JSON.stringify(prev) === JSON.stringify(uniqueCrops) ? prev : uniqueCrops
+        const cropsFromApi = filteredPrices.map(crop =>
+            getCleanCropName(crop.crop)
         );
-    }, [filteredPrices, filteredSearchResults, searchQuery]);
-
-
-    // Use backend filtered results directly
-    const finalFilteredPrices = filteredPrices;
-    const finalFilteredSearchResults = filteredSearchResults;
-
-    // Generate search suggestions based on city names
-    const generateSearchSuggestions = (query: string) => {
-        if (!query.trim()) {
-            setSearchSuggestions([]);
-            setShowSuggestions(false);
-            return;
-        }
-
-        const suggestions = cities
-            .filter(city => city.name.toLowerCase().includes(query.toLowerCase()))
-            .map(city => city.name)
-            .slice(0, 5); // Limit to 5 suggestions
-
-        setSearchSuggestions(suggestions);
-        setShowSuggestions(suggestions.length > 0);
-    };
-
-    // Handle search input changes
-    const handleSearchChange = (text: string) => {
-        setSearchQuery(text);
-        generateSearchSuggestions(text);
-
-        if (!text.trim()) {
-            setShowSuggestions(false);
-            return;
-        }
-
-        const isCitySearch = cities.some(city =>
-            city.name.toLowerCase().includes(text.toLowerCase())
-        );
-
-        if (isCitySearch) {
-            // Search by city name - TanStack Query will handle this
-            setShowSuggestions(false);
-        }
-    };
-
-    // Handle suggestion selection
-    const handleSuggestionSelect = (cityName: string) => {
-        setSearchQuery(cityName);
-        setShowSuggestions(false);
-    };
+        setAvailableCrops(cropsFromApi);
+    }, [filteredPrices]);
 
     // Clear all filters
     const clearAllFilters = () => {
         setSelectedCity("");
         setSelectedCrop("");
         setSelectedDateRange("");
-        setSearchQuery("");
-        setShowSuggestions(false);
+        setSelectedSpecificDate(null);
         setCurrentPage(1); // Reset to first page
     };
 
     // Check if any filters are active
-    const hasActiveFilters = selectedCity || selectedCrop || selectedDateRange || searchQuery;
+    const hasActiveFilters = selectedCity || selectedCrop || selectedDateRange || selectedSpecificDate;
+
+    // Handle date picker change
+    const onDatePickerChange = (event: { type: string }, date?: Date) => {
+        if (event.type === 'dismissed') {
+            if (Platform.OS === 'android') setShowDatePicker(false);
+            return;
+        }
+        if (date) {
+            const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            setTempPickerDate(normalized);
+            if (Platform.OS === 'android') {
+                setSelectedSpecificDate(normalized);
+                setSelectedDateRange('specific');
+                setTimeout(() => setShowDatePicker(false), 100);
+            }
+        }
+    };
+
+    const onConfirmDateIOS = () => {
+        const normalized = new Date(tempPickerDate.getFullYear(), tempPickerDate.getMonth(), tempPickerDate.getDate());
+        setSelectedSpecificDate(normalized);
+        setSelectedDateRange('specific');
+        setShowDatePicker(false);
+    };
 
     const handleCropPress = (crop: CropPrice) => {
         const cropData = encodeURIComponent(JSON.stringify(crop));
@@ -211,15 +178,11 @@ export default function PricesScreen() {
     const onRefresh = async () => {
         await Promise.all([
             refetchCities(),
-            refetchPrices(),
-            refetchSearch()
+            refetchPrices()
         ]);
     };
 
 
-    const getCleanCropName = (cropString: string) => {
-        return cropString.replace(/^\d+/, '').trim();
-    };
 
     useEffect(() => {
         if (cities.length > 0 && selectedCity === undefined) {
@@ -244,7 +207,7 @@ export default function PricesScreen() {
                         fontSize: 18,
                         color: getColor(colorScheme, 'error')
                     }}>
-                        Failed to load cities
+                        شہر لوڈ کرنے میں ناکام
                     </ThemedText>
                     <TouchableOpacity
                         style={{
@@ -260,7 +223,7 @@ export default function PricesScreen() {
                             color: getColor(colorScheme, 'buttonText'),
                             fontWeight: '600'
                         }}>
-                            Try Again
+                            دوبارہ کوشش کریں
                         </ThemedText>
                     </TouchableOpacity>
                 </View>
@@ -269,23 +232,17 @@ export default function PricesScreen() {
     }
 
     return (
-        <ScrollView
-            style={getContainerStyle(colorScheme)}
-            refreshControl={
-                <RefreshControl
-                    refreshing={citiesLoading || pricesLoading || searchLoading}
-                    onRefresh={onRefresh}
-                    colors={[getColor(colorScheme, 'primary')]}
-                    tintColor={getColor(colorScheme, 'primary')}
-                />
-            }
-        >
-            {/* Header */}
-            <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('sm') }]}>
+        <View style={[getContainerStyle(colorScheme), { flex: 1 }]}>
+            <StatusBar 
+                barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+                backgroundColor={getColor(colorScheme, 'primary')}
+            />
+            {/* Fixed Header */}
+            <View style={getHeaderStyle(colorScheme)}>
                 <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    marginBottom: getSpacing('sm')
+                    marginBottom: getSpacing('md')
                 }}>
                     <View style={{
                         width: 36,
@@ -304,110 +261,28 @@ export default function PricesScreen() {
                             fontSize: 30,
                             fontWeight: '600'
                         }}>
-                            Crop Prices
+                            فصلیں کی قیمتیں
                         </ThemedText>
                     </View>
                 </View>
 
             </View>
 
-            {/* Search and Filters */}
-            <View style={getSectionStyle(colorScheme)}>
-                {/* Search Bar */}
-                <View style={{
-                    position: 'relative',
-                    marginBottom: getSpacing('md')
-                }}>
-                    <TextInput
-                        placeholder="Search crops or cities..."
-                        placeholderTextColor={getColor(colorScheme, 'outline')}
-                        value={searchQuery}
-                        onChangeText={handleSearchChange}
-                        style={getSearchInputStyle(colorScheme)}
-                    />
-                    <Ionicons
-                        name="search"
-                        size={20}
-                        color={getColor(colorScheme, 'outline')}
-                        style={{
-                            position: 'absolute',
-                            left: getSpacing('md'),
-                            top: 12
-                        }}
-                    />
-
-                    {/* Clear Search Button */}
-                    {searchQuery.length > 0 && (
-                        <TouchableOpacity
-                            style={{
-                                position: 'absolute',
-                                right: getSpacing('md'),
-                                top: 12
-                            }}
-                            onPress={() => {
-                                setSearchQuery('');
-                                setShowSuggestions(false);
-                            }}
-                        >
-                            <Ionicons name="close-circle" size={24} color={getColor(colorScheme, 'outline')} />
-                        </TouchableOpacity>
-                    )}
-
-                    {/* Search Suggestions */}
-                    {showSuggestions && searchSuggestions.length > 0 && (
-                        <View style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            right: 0,
-                            zIndex: 10,
-                            marginTop: getSpacing('xs'),
-                            borderRadius: 12,
-                            borderWidth: 1,
-                            backgroundColor: getColor(colorScheme, 'surface'),
-                            borderColor: getColor(colorScheme, 'outline'),
-                            shadowColor: getColor(colorScheme, 'text'),
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.1,
-                            shadowRadius: 4,
-                            elevation: 5
-                        }}>
-                            {searchSuggestions.map((suggestion, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={{
-                                        paddingHorizontal: getSpacing('md'),
-                                        paddingVertical: getSpacing('md'),
-                                        borderBottomWidth: index === searchSuggestions.length - 1 ? 0 : 1,
-                                        borderBottomColor: getColor(colorScheme, 'outline'),
-                                        backgroundColor: 'transparent'
-                                    }}
-                                    onPress={() => handleSuggestionSelect(suggestion)}
-                                >
-                                    <View style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center'
-                                    }}>
-                                        <Ionicons name="location" size={16} color={getColor(colorScheme, 'primary')} />
-                                        <ThemedText style={{
-                                            marginLeft: getSpacing('sm'),
-                                            color: getColor(colorScheme, 'text')
-                                        }}>
-                                            {suggestion}
-                                        </ThemedText>
-                                    </View>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-                </View>
-
+            {/* Filters */}
+            <View style={[getSectionStyle(colorScheme),
+                {
+                    borderBottomColor: getColor(colorScheme, 'outline'),
+                    borderBottomWidth: 1,
+                    paddingBottom: getSpacing('sm'),
+                }
+                ]}>
                 {/* Filter Toggle Button */}
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: getSpacing('md')
+                    marginBottom: getSpacing('sm'),
+                
                 }}>
                     <TouchableOpacity
                         style={{
@@ -432,7 +307,7 @@ export default function PricesScreen() {
                             fontWeight: '600',
                             color: hasActiveFilters ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                         }}>
-                            Filters {hasActiveFilters ? `(${[selectedCity, selectedCrop, selectedDateRange].filter(Boolean).length})` : ''}
+                            فلٹرز {hasActiveFilters ? `(${[selectedCity, selectedCrop, selectedDateRange, selectedSpecificDate].filter(Boolean).length})` : ''}
                         </ThemedText>
                     </TouchableOpacity>
 
@@ -454,7 +329,7 @@ export default function PricesScreen() {
                                 fontWeight: '600',
                                 color: getColor(colorScheme, 'buttonText')
                             }}>
-                                Clear All
+                                تمام صاف کریں
                             </ThemedText>
                         </TouchableOpacity>
                     )}
@@ -478,7 +353,7 @@ export default function PricesScreen() {
                                 marginBottom: getSpacing('sm'),
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                Location
+                                مقام
                             </ThemedText>
                             <ScrollView
                                 horizontal
@@ -492,7 +367,7 @@ export default function PricesScreen() {
                                         fontWeight: '600',
                                         color: selectedCity === "" ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                                     }}>
-                                        All Cities
+                                        تمام شہر
                                     </ThemedText>
                                 </TouchableOpacity>
 
@@ -506,7 +381,7 @@ export default function PricesScreen() {
                                             fontWeight: '600',
                                             color: selectedCity === city._id ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                                         }}>
-                                            {city.name}
+                                            {getUrduCityName(city.name)}
                                         </ThemedText>
                                     </TouchableOpacity>
                                 ))}
@@ -521,7 +396,7 @@ export default function PricesScreen() {
                                 marginBottom: getSpacing('sm'),
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                Crop Type
+                                فصل کی قسم
                             </ThemedText>
                             <TouchableOpacity
                                 style={{
@@ -540,7 +415,7 @@ export default function PricesScreen() {
                                 <ThemedText style={{
                                     color: selectedCrop ? getColor(colorScheme, 'text') : getColor(colorScheme, 'outline')
                                 }}>
-                                    {selectedCrop || 'Select Crop Type'}
+                                    {getUrduCropName(selectedCrop) || 'فصل کی قسم منتخب کریں'}
                                 </ThemedText>
                                 <Ionicons name="chevron-down" size={20} color={getColor(colorScheme, 'outline')} />
                             </TouchableOpacity>
@@ -554,7 +429,7 @@ export default function PricesScreen() {
                                 marginBottom: getSpacing('sm'),
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                Date Range
+                                تاریخ
                             </ThemedText>
                             <TouchableOpacity
                                 style={{
@@ -573,11 +448,12 @@ export default function PricesScreen() {
                                 <ThemedText style={{
                                     color: selectedDateRange ? getColor(colorScheme, 'text') : getColor(colorScheme, 'outline')
                                 }}>
-                                    {selectedDateRange ?
-                                        selectedDateRange === 'today' ? 'Today' :
-                                            selectedDateRange === 'week' ? 'Last 7 Days' :
-                                                selectedDateRange === 'month' ? 'Last 30 Days' : 'All Time'
-                                        : 'Select Date Range'
+                                    {selectedDateRange === 'specific' && selectedSpecificDate
+                                        ? selectedSpecificDate.toLocaleDateString()
+                                        : selectedDateRange === 'today' ? 'آج' :
+                                            selectedDateRange === 'week' ? 'آخری 7 دن' :
+                                                selectedDateRange === 'month' ? 'آخری 30 دن'
+                                                : 'تاریخ منتخب کریں'
                                     }
                                 </ThemedText>
                                 <Ionicons name="chevron-down" size={20} color={getColor(colorScheme, 'outline')} />
@@ -585,8 +461,22 @@ export default function PricesScreen() {
                         </View>
                     </View>
                 )}
+            </View>
 
-                {/* Content */}
+            {/* Scrollable Content */}
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80, paddingTop: getSpacing('md') }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={citiesLoading || pricesLoading}
+                        onRefresh={onRefresh}
+                        colors={[getColor(colorScheme, 'primary')]}
+                        tintColor={getColor(colorScheme, 'primary')}
+                    />
+                }
+            >
                 {citiesLoading || pricesLoading ? (
                     <View style={{
                         flex: 1,
@@ -599,7 +489,7 @@ export default function PricesScreen() {
                             marginTop: getSpacing('md'),
                             color: getColor(colorScheme, 'text')
                         }}>
-                            Loading crop prices...
+                            فصلیں کی قیمتیں لوڈ ہو رہی ہیں...
                         </ThemedText>
                     </View>
                 ) : (
@@ -616,7 +506,7 @@ export default function PricesScreen() {
                                     ...getTextStyle(colorScheme, 'heading'),
                                     color: getColor(colorScheme, 'primary')
                                 }}>
-                                    {selectedCity ? cities.find(city => city._id === selectedCity)?.name : 'All Cities'} Market
+                                    {selectedCity ? getUrduCityName(cities.find(city => city._id === selectedCity)?.name || '') : 'تمام شہر'} مارکیٹ
                                 </ThemedText>
                                 <View style={{
                                     paddingHorizontal: getSpacing('sm'),
@@ -629,7 +519,7 @@ export default function PricesScreen() {
                                         fontWeight: '600',
                                         color: getColor(colorScheme, 'buttonText')
                                     }}>
-                                        {searchQuery ? finalFilteredSearchResults.length : finalFilteredPrices.length} Crops with Prices
+                                        {filteredPrices.length} قیمتوں والی فصلیں
                                     </ThemedText>
                                 </View>
                             </View>
@@ -637,52 +527,13 @@ export default function PricesScreen() {
                                 fontSize: 14,
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                Last updated: {new Date().toLocaleDateString()}
+                                آخری تازہ کاری: {new Date().toLocaleDateString()}
                             </ThemedText>
                         </View>
 
-                        {/* Search Results */}
-                        {searchQuery && finalFilteredSearchResults.length > 0 && (
-                            <View style={getCardStyle(colorScheme)}>
-                                <View style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginBottom: getSpacing('sm')
-                                }}>
-                                    <ThemedText style={{
-                                        ...getTextStyle(colorScheme, 'heading'),
-                                        color: getColor(colorScheme, 'primary')
-                                    }}>
-                                        Search Results for &#34; {searchQuery} &#34;
-                                    </ThemedText>
-                                    <View style={{
-                                        paddingHorizontal: getSpacing('sm'),
-                                        paddingVertical: getSpacing('xs'),
-                                        borderRadius: 12,
-                                        backgroundColor: getColor(colorScheme, 'primary')
-                                    }}>
-                                        <ThemedText style={{
-                                            fontSize: 12,
-                                            fontWeight: '600',
-                                            color: getColor(colorScheme, 'buttonText')
-                                        }}>
-                                            {finalFilteredSearchResults.length} Crops
-                                        </ThemedText>
-                                    </View>
-                                </View>
-                                <ThemedText style={{
-                                    fontSize: 14,
-                                    color: getColor(colorScheme, 'text')
-                                }}>
-                                    Last updated: {new Date().toLocaleDateString()}
-                                </ThemedText>
-                            </View>
-                        )}
-
                         {/* Crop Prices List */}
                         {(() => {
-                            const cropsToShow = searchQuery ? finalFilteredSearchResults : finalFilteredPrices;
+                            const cropsToShow = filteredPrices;
 
                             if (cropsToShow.length === 0) {
                                 return (
@@ -698,11 +549,9 @@ export default function PricesScreen() {
                                             textAlign: 'center',
                                             color: getColor(colorScheme, 'text')
                                         }}>
-                                            {searchQuery
-                                                ? 'No crops with prices found for this search'
-                                                : hasActiveFilters
-                                                    ? 'No crops match your current filters'
-                                                    : 'No crops with prices available in this city'
+                                            {hasActiveFilters
+                                                ? 'آپ کے موجودہ فلٹرز سے کوئی فصل نہیں ملی'
+                                                : 'اس شہر میں قیمتوں والی کوئی فصل دستیاب نہیں'
                                             }
                                         </ThemedText>
                                         <ThemedText style={{
@@ -711,11 +560,9 @@ export default function PricesScreen() {
                                             color: getColor(colorScheme, 'outline'),
                                             marginTop: getSpacing('sm')
                                         }}>
-                                            {searchQuery
-                                                ? 'Try searching for a different city or crop'
-                                                : hasActiveFilters
-                                                    ? 'Try adjusting your filters or clear them to see all results'
-                                                    : 'Try selecting a different city or check back later'
+                                            {hasActiveFilters
+                                                ? 'تمام نتائج دیکھنے کے لیے اپنے فلٹرز کو ایڈجسٹ کریں یا صاف کریں'
+                                                : 'مختلف شہر منتخب کریں یا بعد میں دوبارہ چیک کریں'
                                             }
                                         </ThemedText>
                                     </View>
@@ -745,7 +592,7 @@ export default function PricesScreen() {
                                                         marginBottom: getSpacing('xs'),
                                                         color: getColor(colorScheme, 'text')
                                                     }}>
-                                                        {getCleanCropName(crop.crop)}
+                                                        {getUrduCropName(crop.crop)}
                                                     </ThemedText>
 
                                                     <View style={{
@@ -760,7 +607,7 @@ export default function PricesScreen() {
                                                             fontWeight: '600',
                                                             color: getColor(colorScheme, 'text')
                                                         }}>
-                                                            {crop.city}
+                                                            {getUrduCityName(crop.city)}
                                                         </ThemedText>
                                                     </View>
                                                 </View>
@@ -793,32 +640,7 @@ export default function PricesScreen() {
 
                                             {/* Price Display - Min/Max Only */}
                                             {(() => {
-                                                const priceData = getKgPriceDisplay(crop.min_price, crop.max_price);
-
-                                                if (!priceData.hasValidPrices) {
-                                                    return (
-                                                        <View style={{
-                                                            paddingVertical: getSpacing('xl'),
-                                                            alignItems: 'center',
-                                                            backgroundColor: getColor(colorScheme, 'surface'),
-                                                            borderRadius: 12,
-                                                            borderWidth: 1,
-                                                            borderColor: getColor(colorScheme, 'outline'),
-                                                            borderStyle: 'dashed'
-                                                        }}>
-                                                            <Ionicons name="alert-circle" size={32} color={getColor(colorScheme, 'outline')} />
-                                                            <ThemedText style={{
-                                                                marginTop: getSpacing('sm'),
-                                                                fontSize: 16,
-                                                                fontWeight: '600',
-                                                                color: getColor(colorScheme, 'outline')
-                                                            }}>
-                                                                Price Not Available
-                                                            </ThemedText>
-                                                        </View>
-                                                    );
-                                                }
-
+                                                const priceData = getDisplayPrice(crop);
                                                 return (
                                                     <View style={{
                                                         flexDirection: 'row',
@@ -842,7 +664,7 @@ export default function PricesScreen() {
                                                                 fontWeight: '600',
                                                                 letterSpacing: 0.5
                                                             }}>
-                                                                MIN PRICE
+                                                                کم از کم قیمت
                                                             </ThemedText>
                                                             <ThemedText style={{
                                                                 fontSize: 20,
@@ -850,14 +672,14 @@ export default function PricesScreen() {
                                                                 color: getColor(colorScheme, 'primary'),
                                                                 marginBottom: getSpacing('xs')
                                                             }}>
-                                                                Rs. {priceData.minKg}
+                                                                Rs. {priceData.min}
                                                             </ThemedText>
                                                             <ThemedText style={{
                                                                 fontSize: 10,
                                                                 color: getColor(colorScheme, 'outline'),
                                                                 fontWeight: '600'
                                                             }}>
-                                                                PER KG
+                                                                {priceData.unitLabel}
                                                             </ThemedText>
                                                         </View>
 
@@ -879,7 +701,7 @@ export default function PricesScreen() {
                                                                 fontWeight: '600',
                                                                 letterSpacing: 0.5
                                                             }}>
-                                                                MAX PRICE
+                                                                زیادہ سے زیادہ قیمت
                                                             </ThemedText>
                                                             <ThemedText style={{
                                                                 fontSize: 20,
@@ -887,14 +709,14 @@ export default function PricesScreen() {
                                                                 color: getColor(colorScheme, 'primary'),
                                                                 marginBottom: getSpacing('xs')
                                                             }}>
-                                                                Rs. {priceData.maxKg}
+                                                                Rs. {priceData.max}
                                                             </ThemedText>
                                                             <ThemedText style={{
                                                                 fontSize: 10,
                                                                 color: getColor(colorScheme, 'outline'),
                                                                 fontWeight: '600'
                                                             }}>
-                                                                PER KG
+                                                                {priceData.unitLabel}
                                                             </ThemedText>
                                                         </View>
                                                     </View>
@@ -917,14 +739,14 @@ export default function PricesScreen() {
                                                     fontSize: 14,
                                                     color: getColor(colorScheme, 'primary')
                                                 }}>
-                                                    Tap for details
+                                                    تفصیلات کے لیے ٹیپ کریں
                                                 </ThemedText>
                                             </View>
                                         </TouchableOpacity>
                                     ))}
 
                                     {/* Pagination Controls */}
-                                    {!searchQuery && pagination && pagination.total_pages > 1 && (
+                                    {pagination && pagination.total_pages > 1 && (
                                         <View style={{
                                             marginTop: getSpacing('lg'),
                                             marginBottom: getSpacing('md'),
@@ -935,22 +757,7 @@ export default function PricesScreen() {
                                             borderWidth: 1,
                                             borderColor: getColor(colorScheme, 'outline')
                                         }}>
-                                            {/* Pagination Info */}
-                                            <View style={{
-                                                flexDirection: 'row',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                marginBottom: getSpacing('md')
-                                            }}>
-                                                <Ionicons name="document-text" size={16} color={getColor(colorScheme, 'textSecondary')} />
-                                                <ThemedText style={{
-                                                    marginLeft: getSpacing('xs'),
-                                                    fontSize: 14,
-                                                    color: getColor(colorScheme, 'textSecondary')
-                                                }}>
-                                                    Page {pagination.page} of {pagination.total_pages} • {pagination.total_records} total crops
-                                                </ThemedText>
-                                            </View>
+                                        
 
                                             {/* Pagination Buttons */}
                                             <View style={{
@@ -967,8 +774,6 @@ export default function PricesScreen() {
                                                         borderRadius: 20,
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        paddingVertical: getSpacing('md'),
-                                                        paddingHorizontal: getSpacing('md'),
                                                         backgroundColor: pagination.has_prev
                                                             ? getColor(colorScheme, 'primary')
                                                             : getColor(colorScheme, 'outline') + '30',
@@ -988,15 +793,7 @@ export default function PricesScreen() {
                                                             ? getColor(colorScheme, 'buttonText')
                                                             : getColor(colorScheme, 'outline')}
                                                     />
-                                                    <ThemedText style={{
-                                                        marginLeft: getSpacing('xs'),
-                                                        fontWeight: '600',
-                                                        color: pagination.has_prev
-                                                            ? getColor(colorScheme, 'buttonText')
-                                                            : getColor(colorScheme, 'outline')
-                                                    }}>
-                                                        Previous
-                                                    </ThemedText>
+                                            
                                                 </TouchableOpacity>
 
                                                 {/* Page Numbers */}
@@ -1005,7 +802,7 @@ export default function PricesScreen() {
                                                     alignItems: 'center',
                                                     gap: getSpacing('xs')
                                                 }}>
-                                                    {[...Array(Math.min(5, pagination.total_pages))].map((_, index) => {
+                                                    {[...Array(Math.min(4, pagination.total_pages))].map((_, index) => {
                                                         let pageNum: number;
 
                                                         if (pagination.total_pages <= 5) {
@@ -1059,8 +856,6 @@ export default function PricesScreen() {
                                                         borderRadius: 20,
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        paddingVertical: getSpacing('md'),
-                                                        paddingHorizontal: getSpacing('md'),
                                                         backgroundColor: pagination.has_next
                                                             ? getColor(colorScheme, 'primary')
                                                             : getColor(colorScheme, 'outline') + '30',
@@ -1073,15 +868,7 @@ export default function PricesScreen() {
                                                     }}
                                                     disabled={!pagination.has_next || pricesLoading}
                                                 >
-                                                    <ThemedText style={{
-                                                        marginRight: getSpacing('xs'),
-                                                        fontWeight: '600',
-                                                        color: pagination.has_next
-                                                            ? getColor(colorScheme, 'buttonText')
-                                                            : getColor(colorScheme, 'outline')
-                                                    }}>
-                                                        Next
-                                                    </ThemedText>
+                                        
                                                     <Ionicons
                                                         name="chevron-forward"
                                                         size={20}
@@ -1097,29 +884,10 @@ export default function PricesScreen() {
                             );
                         })()}
 
-                        {/* Loading indicator for search */}
-                        {searchLoading && (
-                            <View style={{
-                                flex: 1,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                paddingVertical: 40
-                            }}>
-                                <ActivityIndicator size="small" color={getColor(colorScheme, 'primary')} />
-                                <ThemedText style={{
-                                    marginTop: getSpacing('sm'),
-                                    fontSize: 14,
-                                    color: getColor(colorScheme, 'outline')
-                                }}>
-                                    Searching for prices...
-                                </ThemedText>
-                            </View>
-                        )}
-
                         <View style={{ height: 80 }} />
                     </>
                 )}
-            </View>
+            </ScrollView>
 
             {/* Crop Selection Modal */}
             <Modal
@@ -1151,7 +919,7 @@ export default function PricesScreen() {
                                 fontWeight: 'bold',
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                Select Crop Type
+                                فصل کی قسم منتخب کریں
                             </ThemedText>
                             <TouchableOpacity onPress={() => setShowCropModal(false)}>
                                 <Ionicons name="close" size={24} color={getColor(colorScheme, 'text')} />
@@ -1179,7 +947,7 @@ export default function PricesScreen() {
                                         fontSize: 16,
                                         color: selectedCrop === item ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
                                     }}>
-                                        {item || 'All Crops'}
+                                        {getUrduCropName(item) || 'تمام فصلیں۔'}
                                     </ThemedText>
                                 </TouchableOpacity>
                             )}
@@ -1188,7 +956,7 @@ export default function PricesScreen() {
                 </View>
             </Modal>
 
-            {/* Date Range Selection Modal */}
+            {/* Date Selection Modal */}
             <Modal
                 visible={showDateModal}
                 transparent={true}
@@ -1204,7 +972,7 @@ export default function PricesScreen() {
                         backgroundColor: getColor(colorScheme, 'surface'),
                         borderTopLeftRadius: 20,
                         borderTopRightRadius: 20,
-                        maxHeight: '50%',
+                        maxHeight: '60%',
                         padding: getSpacing('lg')
                     }}>
                         <View style={{
@@ -1218,7 +986,7 @@ export default function PricesScreen() {
                                 fontWeight: 'bold',
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                Select Date Range
+                                تاریخ منتخب کریں
                             </ThemedText>
                             <TouchableOpacity onPress={() => setShowDateModal(false)}>
                                 <Ionicons name="close" size={24} color={getColor(colorScheme, 'text')} />
@@ -1227,29 +995,45 @@ export default function PricesScreen() {
 
                         <FlatList
                             data={[
-                                { value: '', label: 'All Time' },
-                                { value: 'today', label: 'Today' },
-                                { value: 'week', label: 'Last 7 Days' },
-                                { value: 'month', label: 'Last 30 Days' }
+                                { value: '', label: 'تمام وقت' },
+                                { value: 'today', label: 'آج' },
+                                { value: 'week', label: 'آخری 7 دن' },
+                                { value: 'month', label: 'آخری 30 دن' },
+                                { value: 'calendar', label: 'مخصوص تاریخ منتخب کریں', isCalendar: true }
                             ]}
-                            keyExtractor={(item) => item.value}
+                            keyExtractor={(item) => item.isCalendar ? 'calendar' : item.value || 'all'}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
                                     style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
                                         paddingVertical: getSpacing('md'),
                                         paddingHorizontal: getSpacing('md'),
                                         borderBottomWidth: 1,
                                         borderBottomColor: getColor(colorScheme, 'outline'),
-                                        backgroundColor: selectedDateRange === item.value ? getColor(colorScheme, 'primary') + '20' : 'transparent'
+                                        backgroundColor: (item.isCalendar ? selectedDateRange === 'specific' : selectedDateRange === item.value) ? getColor(colorScheme, 'primary') + '20' : 'transparent'
                                     }}
                                     onPress={() => {
-                                        setSelectedDateRange(item.value);
-                                        setShowDateModal(false);
+                                        if (item.isCalendar) {
+                                            setShowDateModal(false);
+                                            setTempPickerDate(selectedSpecificDate ?? new Date());
+                                            setShowDatePicker(true);
+                                        } else {
+                                            setSelectedDateRange(item.value);
+                                            if (item.value === '') setSelectedSpecificDate(null);
+                                            setShowDateModal(false);
+                                        }
                                     }}
                                 >
+                                    <Ionicons
+                                        name={item.isCalendar ? 'calendar' : 'today'}
+                                        size={20}
+                                        color={(item.isCalendar ? selectedDateRange === 'specific' : selectedDateRange === item.value) ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'outline')}
+                                        style={{ marginRight: getSpacing('sm') }}
+                                    />
                                     <ThemedText style={{
                                         fontSize: 16,
-                                        color: selectedDateRange === item.value ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
+                                        color: (item.isCalendar ? selectedDateRange === 'specific' : selectedDateRange === item.value) ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
                                     }}>
                                         {item.label}
                                     </ThemedText>
@@ -1259,6 +1043,52 @@ export default function PricesScreen() {
                     </View>
                 </View>
             </Modal>
-        </ScrollView>
+
+            {/* Date Picker (Calendar) */}
+            {showDatePicker && (
+                Platform.OS === 'ios' ? (
+                    <Modal visible={true} transparent animationType="slide">
+                        <TouchableOpacity
+                            style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}
+                            activeOpacity={1}
+                            onPress={() => setShowDatePicker(false)}
+                        >
+                            <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+                                <View style={{
+                                    backgroundColor: getColor(colorScheme, 'surface'),
+                                    borderTopLeftRadius: 20,
+                                    borderTopRightRadius: 20,
+                                    padding: getSpacing('lg')
+                                }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: getSpacing('md'), marginBottom: getSpacing('sm') }}>
+                                        <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                            <ThemedText style={{ color: getColor(colorScheme, 'outline'), fontWeight: '600' }}>منسوخ</ThemedText>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={onConfirmDateIOS}>
+                                            <ThemedText style={{ color: getColor(colorScheme, 'primary'), fontWeight: '600' }}>ٹھیک ہے</ThemedText>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <DateTimePicker
+                                        value={tempPickerDate}
+                                        mode="date"
+                                        display="spinner"
+                                        onChange={onDatePickerChange}
+                                        maximumDate={new Date()}
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                        </TouchableOpacity>
+                    </Modal>
+                ) : (
+                    <DateTimePicker
+                        value={tempPickerDate}
+                        mode="date"
+                        display="calendar"
+                        onChange={onDatePickerChange}
+                        maximumDate={new Date()}
+                    />
+                )
+            )}
+        </View>
     );
 }
