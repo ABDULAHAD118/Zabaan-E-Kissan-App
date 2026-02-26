@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
     ScrollView,
     TouchableOpacity,
@@ -16,8 +16,8 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import {
     useCities,
+    useCrops,
     usePrices,
-    filterCropsWithPrices,
     type CropPrice
 } from "@/hooks/useApi";
 import {
@@ -32,7 +32,7 @@ import {
     getSpacing
 } from "@/utils/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { getCleanCropName, getDisplayPrice, getUrduCityName, getUrduCropName } from "@/utils/helper";
+import { getDisplayPrice, getUrduCityName, getUrduCropName } from "@/utils/helper";
 
 export default function PricesScreen() {
     const router = useRouter();
@@ -43,10 +43,8 @@ export default function PricesScreen() {
     const [selectedSpecificDate, setSelectedSpecificDate] = useState<Date | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [showCropModal, setShowCropModal] = useState(false);
-    const [showDateModal, setShowDateModal] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [tempPickerDate, setTempPickerDate] = useState<Date>(new Date());
-    const [availableCrops, setAvailableCrops] = useState<string[]>([]);
+    const [tempPickerDate, setTempPickerDate] = useState(new Date());
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +57,12 @@ export default function PricesScreen() {
         error: citiesError,
         refetch: refetchCities
     } = useCities();
+
+    const {
+        data: crops = [],
+        isLoading: cropsLoading,
+        refetch: refetchCrops
+    } = useCrops();
 
     // Build filter object for API
     const buildFilters = () => {
@@ -75,34 +79,11 @@ export default function PricesScreen() {
             filters.crop = selectedCrop;
         }
 
-        if (selectedDateRange) {
-            let dateString = '';
-            const formatDateForApi = (d: Date) => d.toLocaleDateString('en-GB').replace(/\//g, '-');
+        if (selectedSpecificDate) {
+            const formatDateForApi = (d: Date) =>
+                d.toLocaleDateString('en-GB').replace(/\//g, '-');
 
-            if (selectedDateRange === 'specific' && selectedSpecificDate) {
-                dateString = formatDateForApi(selectedSpecificDate);
-            } else {
-                const today = new Date();
-                switch (selectedDateRange) {
-                    case 'today':
-                        dateString = formatDateForApi(today);
-                        break;
-                    case 'week':
-                        const weekAgo = new Date(today);
-                        weekAgo.setDate(today.getDate() - 7);
-                        dateString = formatDateForApi(weekAgo);
-                        break;
-                    case 'month':
-                        const monthAgo = new Date(today);
-                        monthAgo.setMonth(today.getMonth() - 1);
-                        dateString = formatDateForApi(monthAgo);
-                        break;
-                }
-            }
-
-            if (dateString) {
-                filters.date = dateString;
-            }
+            filters.date = formatDateForApi(selectedSpecificDate);
         }
 
         // Add pagination
@@ -122,43 +103,53 @@ export default function PricesScreen() {
     const cropPrices = pricesResponse?.data || [];
     const pagination = pricesResponse?.pagination;
 
-    // Filter crops with prices only - but be less restrictive
-    const filteredPrices = filterCropsWithPrices(cropPrices);
-
-    // Extract unique crops from all prices for the crop filter
-    useEffect(() => {
-        const cropsFromApi = filteredPrices.map(crop =>
-            getCleanCropName(crop.crop)
-        );
-        setAvailableCrops(cropsFromApi);
-    }, [filteredPrices]);
-
     // Clear all filters
     const clearAllFilters = () => {
         setSelectedCity("");
         setSelectedCrop("");
         setSelectedDateRange("");
         setSelectedSpecificDate(null);
-        setCurrentPage(1); // Reset to first page
+        setCurrentPage(1);
+        setShowFilters(false);
     };
 
     // Check if any filters are active
     const hasActiveFilters = selectedCity || selectedCrop || selectedDateRange || selectedSpecificDate;
 
     // Handle date picker change
-    const onDatePickerChange = (event: { type: string }, date?: Date) => {
-        if (event.type === 'dismissed') {
-            if (Platform.OS === 'android') setShowDatePicker(false);
-            return;
-        }
-        if (date) {
-            const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-            setTempPickerDate(normalized);
-            if (Platform.OS === 'android') {
+    const onDatePickerChange = (event: any, date?: Date) => {
+        if (Platform.OS === 'android') {
+            if (event.type === 'dismissed') {
+                setShowDatePicker(false);
+                return;
+            }
+
+            if (event.type === 'set' && date) {
+                const normalized = new Date(
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate()
+                );
+
+                setTempPickerDate(normalized);
                 setSelectedSpecificDate(normalized);
                 setSelectedDateRange('specific');
-                setTimeout(() => setShowDatePicker(false), 100);
+                setShowDatePicker(false);
+                setShowFilters(!showFilters)
             }
+
+            return;
+        }
+
+        // iOS
+        if (date) {
+            const normalized = new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+            );
+            setTempPickerDate(normalized);
+            setShowFilters(!showFilters)
         }
     };
 
@@ -178,7 +169,8 @@ export default function PricesScreen() {
     const onRefresh = async () => {
         await Promise.all([
             refetchCities(),
-            refetchPrices()
+            refetchPrices(),
+            refetchCrops()
         ]);
     };
 
@@ -233,7 +225,7 @@ export default function PricesScreen() {
 
     return (
         <View style={[getContainerStyle(colorScheme), { flex: 1 }]}>
-            <StatusBar 
+            <StatusBar
                 barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
                 backgroundColor={getColor(colorScheme, 'primary')}
             />
@@ -261,7 +253,7 @@ export default function PricesScreen() {
                             fontSize: 30,
                             fontWeight: '600'
                         }}>
-                            فصلیں کی قیمتیں
+                            فصلوں کی قیمتیں
                         </ThemedText>
                     </View>
                 </View>
@@ -270,19 +262,19 @@ export default function PricesScreen() {
 
             {/* Filters */}
             <View style={[getSectionStyle(colorScheme),
-                {
-                    borderBottomColor: getColor(colorScheme, 'outline'),
-                    borderBottomWidth: 1,
-                    paddingBottom: getSpacing('sm'),
-                }
-                ]}>
+            {
+                borderBottomColor: getColor(colorScheme, 'outline'),
+                borderBottomWidth: 1,
+                paddingBottom: getSpacing('sm'),
+            }
+            ]}>
                 {/* Filter Toggle Button */}
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: getSpacing('sm'),
-                
+
                 }}>
                     <TouchableOpacity
                         style={{
@@ -361,9 +353,10 @@ export default function PricesScreen() {
                             >
                                 <TouchableOpacity
                                     style={getCityChipStyle(colorScheme, selectedCity === "")}
-                                    onPress={() => setSelectedCity("")}
+                                    onPress={() => { setSelectedCity(""); setShowFilters(!showFilters) }}
                                 >
                                     <ThemedText style={{
+                                        textAlign: 'center',
                                         fontWeight: '600',
                                         color: selectedCity === "" ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                                     }}>
@@ -375,7 +368,7 @@ export default function PricesScreen() {
                                     <TouchableOpacity
                                         key={city._id}
                                         style={getCityChipStyle(colorScheme, selectedCity === city._id)}
-                                        onPress={() => setSelectedCity(city._id)}
+                                        onPress={() => { setSelectedCity(city._id); setShowFilters(!showFilters) }}
                                     >
                                         <ThemedText style={{
                                             fontWeight: '600',
@@ -443,17 +436,17 @@ export default function PricesScreen() {
                                     borderColor: getColor(colorScheme, 'outline'),
                                     backgroundColor: getColor(colorScheme, 'background')
                                 }}
-                                onPress={() => setShowDateModal(true)}
+                                onPress={() => {
+                                    setTempPickerDate(selectedSpecificDate ?? new Date());
+                                    setShowDatePicker(true);
+                                }}
                             >
                                 <ThemedText style={{
                                     color: selectedDateRange ? getColor(colorScheme, 'text') : getColor(colorScheme, 'outline')
                                 }}>
-                                    {selectedDateRange === 'specific' && selectedSpecificDate
+                                    {selectedSpecificDate
                                         ? selectedSpecificDate.toLocaleDateString()
-                                        : selectedDateRange === 'today' ? 'آج' :
-                                            selectedDateRange === 'week' ? 'آخری 7 دن' :
-                                                selectedDateRange === 'month' ? 'آخری 30 دن'
-                                                : 'تاریخ منتخب کریں'
+                                        : 'تاریخ منتخب کریں'
                                     }
                                 </ThemedText>
                                 <Ionicons name="chevron-down" size={20} color={getColor(colorScheme, 'outline')} />
@@ -463,6 +456,7 @@ export default function PricesScreen() {
                 )}
             </View>
 
+
             {/* Scrollable Content */}
             <ScrollView
                 style={{ flex: 1 }}
@@ -470,14 +464,14 @@ export default function PricesScreen() {
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
-                        refreshing={citiesLoading || pricesLoading}
+                        refreshing={citiesLoading || pricesLoading || cropsLoading}
                         onRefresh={onRefresh}
                         colors={[getColor(colorScheme, 'primary')]}
                         tintColor={getColor(colorScheme, 'primary')}
                     />
                 }
             >
-                {citiesLoading || pricesLoading ? (
+                {citiesLoading || pricesLoading || cropsLoading ? (
                     <View style={{
                         flex: 1,
                         justifyContent: 'center',
@@ -519,7 +513,7 @@ export default function PricesScreen() {
                                         fontWeight: '600',
                                         color: getColor(colorScheme, 'buttonText')
                                     }}>
-                                        {filteredPrices.length} قیمتوں والی فصلیں
+                                        {cropPrices.length} قیمتوں والی فصلیں
                                     </ThemedText>
                                 </View>
                             </View>
@@ -533,9 +527,7 @@ export default function PricesScreen() {
 
                         {/* Crop Prices List */}
                         {(() => {
-                            const cropsToShow = filteredPrices;
-
-                            if (cropsToShow.length === 0) {
+                            if (cropPrices.length === 0) {
                                 return (
                                     <View style={{
                                         flex: 1,
@@ -571,7 +563,7 @@ export default function PricesScreen() {
 
                             return (
                                 <>
-                                    {cropsToShow.map((crop) => (
+                                    {cropPrices.map((crop) => (
                                         <TouchableOpacity
                                             key={crop._id}
                                             style={getPriceCardStyle(colorScheme)}
@@ -757,7 +749,7 @@ export default function PricesScreen() {
                                             borderWidth: 1,
                                             borderColor: getColor(colorScheme, 'outline')
                                         }}>
-                                        
+
 
                                             {/* Pagination Buttons */}
                                             <View style={{
@@ -793,7 +785,7 @@ export default function PricesScreen() {
                                                             ? getColor(colorScheme, 'buttonText')
                                                             : getColor(colorScheme, 'outline')}
                                                     />
-                                            
+
                                                 </TouchableOpacity>
 
                                                 {/* Page Numbers */}
@@ -868,7 +860,7 @@ export default function PricesScreen() {
                                                     }}
                                                     disabled={!pagination.has_next || pricesLoading}
                                                 >
-                                        
+
                                                     <Ionicons
                                                         name="chevron-forward"
                                                         size={20}
@@ -927,7 +919,7 @@ export default function PricesScreen() {
                         </View>
 
                         <FlatList
-                            data={['', ...availableCrops]}
+                            data={['', ...crops.map(c => c.name)]}
                             keyExtractor={(item, index) => index.toString()}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
@@ -941,6 +933,7 @@ export default function PricesScreen() {
                                     onPress={() => {
                                         setSelectedCrop(item);
                                         setShowCropModal(false);
+                                        setShowFilters(!showFilters)
                                     }}
                                 >
                                     <ThemedText style={{
@@ -948,94 +941,6 @@ export default function PricesScreen() {
                                         color: selectedCrop === item ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
                                     }}>
                                         {getUrduCropName(item) || 'تمام فصلیں۔'}
-                                    </ThemedText>
-                                </TouchableOpacity>
-                            )}
-                        />
-                    </View>
-                </View>
-            </Modal>
-
-            {/* Date Selection Modal */}
-            <Modal
-                visible={showDateModal}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowDateModal(false)}
-            >
-                <View style={{
-                    flex: 1,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    justifyContent: 'flex-end'
-                }}>
-                    <View style={{
-                        backgroundColor: getColor(colorScheme, 'surface'),
-                        borderTopLeftRadius: 20,
-                        borderTopRightRadius: 20,
-                        maxHeight: '60%',
-                        padding: getSpacing('lg')
-                    }}>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: getSpacing('lg')
-                        }}>
-                            <ThemedText style={{
-                                fontSize: 20,
-                                fontWeight: 'bold',
-                                color: getColor(colorScheme, 'text')
-                            }}>
-                                تاریخ منتخب کریں
-                            </ThemedText>
-                            <TouchableOpacity onPress={() => setShowDateModal(false)}>
-                                <Ionicons name="close" size={24} color={getColor(colorScheme, 'text')} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <FlatList
-                            data={[
-                                { value: '', label: 'تمام وقت' },
-                                { value: 'today', label: 'آج' },
-                                { value: 'week', label: 'آخری 7 دن' },
-                                { value: 'month', label: 'آخری 30 دن' },
-                                { value: 'calendar', label: 'مخصوص تاریخ منتخب کریں', isCalendar: true }
-                            ]}
-                            keyExtractor={(item) => item.isCalendar ? 'calendar' : item.value || 'all'}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        paddingVertical: getSpacing('md'),
-                                        paddingHorizontal: getSpacing('md'),
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: getColor(colorScheme, 'outline'),
-                                        backgroundColor: (item.isCalendar ? selectedDateRange === 'specific' : selectedDateRange === item.value) ? getColor(colorScheme, 'primary') + '20' : 'transparent'
-                                    }}
-                                    onPress={() => {
-                                        if (item.isCalendar) {
-                                            setShowDateModal(false);
-                                            setTempPickerDate(selectedSpecificDate ?? new Date());
-                                            setShowDatePicker(true);
-                                        } else {
-                                            setSelectedDateRange(item.value);
-                                            if (item.value === '') setSelectedSpecificDate(null);
-                                            setShowDateModal(false);
-                                        }
-                                    }}
-                                >
-                                    <Ionicons
-                                        name={item.isCalendar ? 'calendar' : 'today'}
-                                        size={20}
-                                        color={(item.isCalendar ? selectedDateRange === 'specific' : selectedDateRange === item.value) ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'outline')}
-                                        style={{ marginRight: getSpacing('sm') }}
-                                    />
-                                    <ThemedText style={{
-                                        fontSize: 16,
-                                        color: (item.isCalendar ? selectedDateRange === 'specific' : selectedDateRange === item.value) ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
-                                    }}>
-                                        {item.label}
                                     </ThemedText>
                                 </TouchableOpacity>
                             )}
@@ -1069,11 +974,11 @@ export default function PricesScreen() {
                                         </TouchableOpacity>
                                     </View>
                                     <DateTimePicker
+                                        key={tempPickerDate.toISOString()}
                                         value={tempPickerDate}
                                         mode="date"
-                                        display="spinner"
+                                        display="calendar"
                                         onChange={onDatePickerChange}
-                                        maximumDate={new Date()}
                                     />
                                 </View>
                             </TouchableOpacity>
@@ -1081,11 +986,12 @@ export default function PricesScreen() {
                     </Modal>
                 ) : (
                     <DateTimePicker
-                        value={tempPickerDate}
+                        testID="dateTimePicker"
+                        value={tempPickerDate!}
                         mode="date"
-                        display="calendar"
                         onChange={onDatePickerChange}
                         maximumDate={new Date()}
+
                     />
                 )
             )}

@@ -1,6 +1,6 @@
-import { Tabs } from "expo-router";
-import React from "react";
-import { Platform, View } from "react-native";
+import { Tabs, useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
+import { Alert, BackHandler, Platform, View } from "react-native";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -9,6 +9,30 @@ import { Entypo, Ionicons } from "@expo/vector-icons";
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        Alert.alert(
+          "Exit App",
+          "Are you sure you want to exit?",
+          [
+            { text: "Cancel", style: "cancel", onPress: () => {} },
+            { text: "Yes", onPress: () => BackHandler.exitApp() },
+          ],
+          { cancelable: true }
+        );
+        return true; // prevent default behavior
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [])
+  );
 
   return (
     <Tabs
@@ -39,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Disease Detection",
+          title: "بیماری کا پتہ لگانا",
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 40,
@@ -67,7 +91,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: "AI Chat",
+          title: "اے آئی چیٹ",
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 40,
@@ -95,7 +119,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="prices"
         options={{
-          title: "Crop Prices",
+          title: "فصلوں کی قیمتیں",
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 40,

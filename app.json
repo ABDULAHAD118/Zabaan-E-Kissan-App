@@ -4,16 +4,16 @@
     "slug": "zabaan-e-kisaan",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": {
-      "dark": "./assets/images/icon-dark.png",
-      "light": "./assets/images/icon.png",
-      "tinted": "./assets/images/icon.png"
-    },
+    "icon": "./assets/images/icon.png",
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.abdulahad0118.zabaanekisaan",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,17 +28,13 @@
       "output": "static",
       "favicon": "./assets/images/icon.png"
     },
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#FBFCFB"
+    },
     "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#ffffff",
-          "image": "./assets/images/splash.png",
-          "resizeMode": "contain"
-          
-        }
-      ]
+      "expo-router"
     ],
     "experiments": {
       "typedRoutes": true

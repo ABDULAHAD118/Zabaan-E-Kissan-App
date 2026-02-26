@@ -13,4 +13,5 @@ export const API_ENDPOINTS = {
   CITIES: `${ENV.API_BASE_URL}/cities`,
   PRICES: `${ENV.API_BASE_URL}/prices`,
   CHAT: `${ENV.API_BASE_URL}/chat`,
+  CROPS: `${ENV.API_BASE_URL}/crops`,
 } as const;

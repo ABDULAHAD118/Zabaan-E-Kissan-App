@@ -20,6 +20,11 @@ export type City = {
   name: string;
 };
 
+export type Crop = {
+  _id: string;
+  name: string;
+};
+
 // Chat API Types
 export type ChatMessage = {
   query: string;
@@ -45,13 +50,25 @@ const fetchCities = async (): Promise<City[]> => {
   const response = await axios.get(API_ENDPOINTS.CITIES);
   const data = response.data;
   if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
-    // Convert the array of city names to the expected format
     return data.data.map((cityName: string, index: number) => ({
       _id: `city_${index}`,
       name: cityName
     }));
   } else {
     throw new Error('Invalid cities data format');
+  }
+};
+
+const fetchCrops = async (): Promise<Crop[]> => {
+  const response = await axios.get(API_ENDPOINTS.CROPS);
+  const data = response.data;
+  if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
+    return data.data.map((cropName: string, index: number) => ({
+      _id: `crop_${index}`,
+      name: cropName
+    }));
+  } else {
+    throw new Error('Invalid crops data format');
   }
 };
 
@@ -111,20 +128,6 @@ const fetchPrices = async (filters?: {
     return {
       data: data.data,
       pagination: data.pagination
-    };
-  } else if (data && Array.isArray(data)) {
-    // Fallback for old API format
-    return {
-      data: data,
-      pagination: {
-        page: 1,
-        limit: data.length,
-        total_pages: 1,
-        total_records: data.length,
-        returned_records: data.length,
-        has_next: false,
-        has_prev: false
-      }
     };
   } else {
     throw new Error('Invalid prices data format');
@@ -238,9 +241,21 @@ export const useCities = () => {
   return useQuery({
     queryKey: ['cities'],
     queryFn: fetchCities,
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 1000 * 60 * 30,
+    
   });
 };
+export const useCrops = () => {
+  return useQuery({
+    queryKey: ['crops'],
+    queryFn: fetchCrops,
+    staleTime: 1000 * 60 * 30,
+  });
+};
+
+
+
+
 
 export const usePrices = (filters?: {
   city?: string;
@@ -265,13 +280,5 @@ export const useSearchPrices = (searchQuery: string) => {
     enabled: !!searchQuery.trim(),
     staleTime: 1000 * 60 * 2, // 2 minutes for search results
     gcTime: 1000 * 60 * 5, // 5 minutes
-  });
-};
-
-// Helper function to filter crops with actual prices
-export const filterCropsWithPrices = (crops: CropPrice[]): CropPrice[] => {
-  return crops.filter(crop => {
-    // Show crops that have either min_price or max_price that's not "-"
-    return crop.min_price !== '-' || crop.max_price !== '-';
   });
 };

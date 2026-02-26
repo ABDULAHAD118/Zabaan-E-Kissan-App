@@ -42,3 +42,5 @@ package-lock.json
 yarn.lock
 bun.lock
 .idea
+
+android
