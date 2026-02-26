@@ -258,7 +258,7 @@ export default function ChatScreen() {
               fontSize: 30,
               fontWeight: '600'
             }}>
-              AI Chat Assistant
+              اے آئی چیٹ اسسٹنٹ
             </ThemedText>
           </View>
           <TouchableOpacity
