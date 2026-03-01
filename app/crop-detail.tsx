@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { getUrduCropName, getUrduCityName, getDisplayPrice } from "@/utils/helper";
 import {
   getContainerStyle,
@@ -21,6 +22,7 @@ import { CropPrice } from "@/hooks/useApi";
 export default function CropDetailScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams();
   
   // Parse crop data from URL params
@@ -28,27 +30,27 @@ export default function CropDetailScreen() {
 
   // Get price display using helper (matches prices page - shows per kg for 100KG crops)
   const priceData = getDisplayPrice(cropData);
-  const minDisplay = (cropData.min_price === '-' || Number.isNaN(Number(priceData.min))) ? 'دستیاب نہیں' : `Rs. ${priceData.min}`;
-  const maxDisplay = (cropData.max_price === '-' || Number.isNaN(Number(priceData.max))) ? 'دستیاب نہیں' : `Rs. ${priceData.max}`;
-  const mainPriceDisplay = (minDisplay === 'دستیاب نہیں' && maxDisplay === 'دستیاب نہیں') 
-    ? 'دستیاب نہیں' 
-    : minDisplay === maxDisplay 
+  const minDisplay = (cropData.min_price === '-' || Number.isNaN(Number(priceData.min))) ? t('cropDetail.notAvailable') : `Rs. ${priceData.min}`;
+  const maxDisplay = (cropData.max_price === '-' || Number.isNaN(Number(priceData.max))) ? t('cropDetail.notAvailable') : `Rs. ${priceData.max}`;
+  const mainPriceDisplay = (minDisplay === t('cropDetail.notAvailable') && maxDisplay === t('cropDetail.notAvailable'))
+    ? t('cropDetail.notAvailable')
+    : minDisplay === maxDisplay
       ? `${minDisplay} ${priceData.unitLabel}`.trim()
       : `${minDisplay} - ${maxDisplay} ${priceData.unitLabel}`.trim();
 
   const handleShare = async () => {
     try {
-      const shareMessage = `${getUrduCropName(cropData.crop)} - ${getUrduCityName(cropData.city)}\nقیمت: ${mainPriceDisplay}\nتاریخ: ${cropData.date}`;
+      const shareMessage = `${getUrduCropName(cropData.crop)} - ${getUrduCityName(cropData.city)}\n${t('cropDetail.pricePerUnit')}: ${mainPriceDisplay}\n${t('cropDetail.date')}: ${cropData.date}`;
       const result = await Share.share({
         message: shareMessage,
-        title: 'زرعی منڈی کی قیمت - Zabaan-e-Kisaan',
+        title: t('cropDetail.title') + ' - Zabaan-e-Kisaan',
       });
       if (result.action === Share.sharedAction) {
         // Shared successfully
       }
     } catch (error) {
         console.log(error);
-      Alert.alert('خطا', 'شیئر کرنے میں مسئلہ پیش آیا۔ دوبارہ کوشش کریں۔');
+      Alert.alert(t('common.error'), t('prices.filterAdjustMessage'));
     }
   };
 
@@ -84,14 +86,14 @@ export default function CropDetailScreen() {
           
           <View style={{ flex: 1 }}>
             <ThemedText style={getTextStyle(colorScheme, 'title')}>
-              فصل کی تفصیلات
+              {t('cropDetail.title')}
             </ThemedText>
             <ThemedText style={{
               ...getTextStyle(colorScheme, 'body'),
               color: getColor(colorScheme, 'buttonText'),
               opacity: 0.9
             }}>
-              مارکیٹ کی معلومات اور بصیرت
+              {t('cropDetail.description')}
             </ThemedText>
           </View>
         </View>
@@ -154,7 +156,7 @@ export default function CropDetailScreen() {
               color: getColor(colorScheme, 'primary'),
               marginBottom: getSpacing('xs')
             }}>
-              موجودہ مارکیٹ قیمت ({priceData.unitLabel})
+              {t('prices.pricePerUnit')} ({priceData.unitLabel})
             </ThemedText>
             <ThemedText style={{
               fontSize: 24,
@@ -189,20 +191,20 @@ export default function CropDetailScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              قیمت کی معلومات
+              {t('cropDetail.priceHistory')}
             </ThemedText>
           </View>
 
           <View style={{ marginBottom: getSpacing('md') }}>
             {[
               { 
-                label: 'کم از کم قیمت (' + priceData.unitLabel + ')', 
+                label: t('cropDetail.minPrice') + ' (' + priceData.unitLabel + ')',
                 value: minDisplay,
                 icon: 'arrow-down',
                 color: getColor(colorScheme, 'success')
               },
               { 
-                label: 'زیادہ سے زیادہ قیمت (' + priceData.unitLabel + ')', 
+                label: t('cropDetail.maxPrice') + ' (' + priceData.unitLabel + ')',
                 value: maxDisplay,
                 icon: 'arrow-up',
                 color: getColor(colorScheme, 'warning')
@@ -270,7 +272,7 @@ export default function CropDetailScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              ڈیٹا کی معلومات
+              {t('cropDetail.statistics')}
             </ThemedText>
           </View>
 
@@ -286,9 +288,9 @@ export default function CropDetailScreen() {
               fontSize: 14,
               lineHeight: 20,
               color: getColor(colorScheme, 'outline'),
-              textAlign: 'right'
+              textAlign: 'justify'
             }}>
-              یہ ڈیٹا درستگی اور قابل اعتمادیت یقینی بنانے کے لیے سرکاری مارکیٹ ذرائع سے خودکار طور پر اپڈیٹ ہوتا ہے۔
+              {t('cropDetail.statDescription')}
             </ThemedText>
           </View>
         </View>
@@ -316,7 +318,7 @@ export default function CropDetailScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              مارکیٹ کی بصیرتیں
+              {t('cropDetail.trend')}
             </ThemedText>
           </View>
 
@@ -331,9 +333,9 @@ export default function CropDetailScreen() {
               fontSize: 16,
               lineHeight: 24,
               color: getColor(colorScheme, 'primary'),
-              textAlign: 'center'
+              textAlign: 'justify'
             }}>
-              💡 مارکیٹ کی قیمتیں موسمی طلب، موسمی حالات اور رسد کی دستیابی سے متاثر ہوتی ہیں۔ اپنی فصل کی فروخت کی منصوبہ بندی کرتے وقت ان عوامل کو مدنظر رکھیں۔
+              💡 {t('cropDetail.trendDescription')}
             </ThemedText>
           </View>
         </View>
@@ -357,7 +359,7 @@ export default function CropDetailScreen() {
               color: getColor(colorScheme, 'buttonText'),
               fontWeight: '600'
             }}>
-              شیئر کریں
+              {t('cropDetail.shareMessage')}
             </ThemedText>
           </TouchableOpacity>
         </View>

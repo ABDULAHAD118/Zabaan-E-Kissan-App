@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import { ScrollView, Switch, TouchableOpacity, View, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
+import { useLanguage } from "@/providers/LanguageProvider";
+import { useTranslation } from "react-i18next";
 import {
   getContainerStyle,
   getHeaderStyle,
   getSectionStyle,
   getContentStyle,
   getCardStyle,
-  getButtonStyle,
   getTextStyle,
   getColor,
   getSpacing
@@ -31,13 +31,17 @@ const languages: LanguageOption[] = [
 
 export default function SettingsScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const colors = Colors[colorScheme];
   const router = useRouter();
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const { language, setLanguage } = useLanguage();
+  const { t } = useTranslation();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(
     colorScheme === "dark"
   );
+
+  const handleLanguageChange = async (langId: string) => {
+    await setLanguage(langId);
+  };
 
   return (
     <View style={getContainerStyle(colorScheme)}>
@@ -71,7 +75,7 @@ export default function SettingsScreen() {
           
           <View style={{ flex: 1 }}>
             <ThemedText style={getTextStyle(colorScheme, 'title')}>
-              Settings
+              {t('settings.title')}
             </ThemedText>
             <ThemedText style={{
               ...getTextStyle(colorScheme, 'body'),
@@ -108,7 +112,7 @@ export default function SettingsScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              Language / زبان
+              {t('settings.language')} / زبان
             </ThemedText>
           </View>
 
@@ -121,14 +125,14 @@ export default function SettingsScreen() {
                   borderRadius: 16,
                   borderWidth: 2,
                   marginBottom: getSpacing('sm'),
-                  backgroundColor: selectedLanguage === lang.id 
-                    ? getColor(colorScheme, 'highlight') 
+                  backgroundColor: language === lang.id
+                    ? getColor(colorScheme, 'highlight')
                     : getColor(colorScheme, 'surface'),
-                  borderColor: selectedLanguage === lang.id 
-                    ? getColor(colorScheme, 'primary') 
+                  borderColor: language === lang.id
+                    ? getColor(colorScheme, 'primary')
                     : getColor(colorScheme, 'outline')
                 }}
-                onPress={() => setSelectedLanguage(lang.id)}
+                onPress={() => handleLanguageChange(lang.id)}
                 activeOpacity={0.8}
               >
                 <View style={{
@@ -163,7 +167,7 @@ export default function SettingsScreen() {
                       </ThemedText>
                     </View>
                   </View>
-                  {selectedLanguage === lang.id && (
+                  {language === lang.id && (
                     <View style={{
                       width: 24,
                       height: 24,

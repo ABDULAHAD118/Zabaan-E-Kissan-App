@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { 
+import React, { useState, useEffect } from "react";
+import {
   ScrollView, 
   TextInput, 
   TouchableOpacity, 
@@ -10,21 +10,18 @@ import {
 } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { Colors } from "@/constants/Colors";
 import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import * as Speech from 'expo-speech';
 import {sendChatMessage, fetchChatHistory, sendChatMessageSocket} from "@/hooks/useApi";
 import LocationPicker from "@/components/LocationPicker";
-// import VoiceRecorder from "@/components/VoiceRecorder";
+import VoiceInput from "@/components/VoiceInput";
+import { useTranslation } from "react-i18next";
 import { generateUUID } from "@/utils/uuid";
 import {
   getContainerStyle,
   getHeaderStyle,
-  getSectionStyle,
   getContentStyle,
-  getCardStyle,
   getInputStyle,
-  getButtonStyle,
   getTextStyle,
   getColor,
   getSpacing
@@ -40,9 +37,7 @@ interface Message {
 
 export default function ChatScreen() {
   const colorScheme = useColorScheme() ?? "light";
-   const [hasPermission, setHasPermission] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [text, setText] = useState('');
+  const { t } = useTranslation();
 
   const [threadId] = useState(() => {
     const uuid = generateUUID();
@@ -83,7 +78,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Hello! I\'m your AI farming expert. How can I help you today?',
+      text: t('chat.welcomeMessage'),
       isUser: false,
       timestamp: new Date()
     }
@@ -258,27 +253,22 @@ export default function ChatScreen() {
               fontSize: 30,
               fontWeight: '600'
             }}>
-              اے آئی چیٹ اسسٹنٹ
+              {t('chat.title')}
             </ThemedText>
           </View>
+
           <TouchableOpacity
             onPress={() => setShowLocationPicker(true)}
             style={{
-              padding: getSpacing('xs'),
-              borderRadius: 8,
-              backgroundColor: locationEnabled 
-                ? getColor(colorScheme, 'success') 
-                : 'transparent',
-              borderWidth: 1,
-              borderColor: locationEnabled 
-                ? getColor(colorScheme, 'success')
-                : getColor(colorScheme, 'outline'),
+              padding: getSpacing('sm'),
+              borderRadius: 30,
+              backgroundColor: getColor(colorScheme, 'highlight'),
             }}
           >
             <Ionicons 
               name={locationEnabled ? "location" : "location-outline"} 
               size={20} 
-              color={getColor(colorScheme, 'buttonText')}
+              color={getColor(colorScheme, 'primary')}
             />
           </TouchableOpacity>
         </View>
@@ -448,7 +438,7 @@ export default function ChatScreen() {
               ...getInputStyle(colorScheme),
               marginRight: getSpacing('sm')
             }}
-            placeholder="Ask anything about farming..."
+            placeholder={t('chat.inputPlaceholder')}
             placeholderTextColor={getColor(colorScheme, 'outline')}
             value={inputText}
             onChangeText={setInputText}
@@ -462,11 +452,12 @@ export default function ChatScreen() {
             justifyContent: 'center',
             alignItems: 'center'
           }}>
-            {/* <VoiceRecorder
+            <VoiceInput
               onTranscript={(text) => {
                 setInputText(text);
               }}
-            /> */}
+              disabled={isProcessing}
+            />
           </View>
 
           <TouchableOpacity

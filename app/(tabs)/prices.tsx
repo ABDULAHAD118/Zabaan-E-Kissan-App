@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, FontAwesome6, MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
     useCities,
     useCrops,
@@ -37,6 +38,7 @@ import { getDisplayPrice, getUrduCityName, getUrduCropName } from "@/utils/helpe
 export default function PricesScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme() ?? "light";
+    const { t } = useTranslation();
     const [selectedCity, setSelectedCity] = useState<string>("");
     const [selectedCrop, setSelectedCrop] = useState<string>("");
     const [selectedDateRange, setSelectedDateRange] = useState<string>("");
@@ -199,7 +201,7 @@ export default function PricesScreen() {
                         fontSize: 18,
                         color: getColor(colorScheme, 'error')
                     }}>
-                        شہر لوڈ کرنے میں ناکام
+                        {t('common.error')}
                     </ThemedText>
                     <TouchableOpacity
                         style={{
@@ -215,7 +217,7 @@ export default function PricesScreen() {
                             color: getColor(colorScheme, 'buttonText'),
                             fontWeight: '600'
                         }}>
-                            دوبارہ کوشش کریں
+                            {t('common.retry')}
                         </ThemedText>
                     </TouchableOpacity>
                 </View>
@@ -234,7 +236,7 @@ export default function PricesScreen() {
                 <View style={{
                     flexDirection: 'row',
                     alignItems: 'center',
-                    marginBottom: getSpacing('md')
+                    marginBottom: getSpacing('sm')
                 }}>
                     <View style={{
                         width: 36,
@@ -253,7 +255,7 @@ export default function PricesScreen() {
                             fontSize: 30,
                             fontWeight: '600'
                         }}>
-                            فصلوں کی قیمتیں
+                            {t('prices.title')}
                         </ThemedText>
                     </View>
                 </View>
@@ -299,7 +301,7 @@ export default function PricesScreen() {
                             fontWeight: '600',
                             color: hasActiveFilters ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                         }}>
-                            فلٹرز {hasActiveFilters ? `(${[selectedCity, selectedCrop, selectedDateRange, selectedSpecificDate].filter(Boolean).length})` : ''}
+                            {t('prices.filters')} {hasActiveFilters ? `(${[selectedCity, selectedCrop, selectedDateRange, selectedSpecificDate].filter(Boolean).length})` : ''}
                         </ThemedText>
                     </TouchableOpacity>
 
@@ -321,7 +323,7 @@ export default function PricesScreen() {
                                 fontWeight: '600',
                                 color: getColor(colorScheme, 'buttonText')
                             }}>
-                                تمام صاف کریں
+                                {t('prices.clearFilters')}
                             </ThemedText>
                         </TouchableOpacity>
                     )}
@@ -345,7 +347,7 @@ export default function PricesScreen() {
                                 marginBottom: getSpacing('sm'),
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                مقام
+                                {t('prices.location')}
                             </ThemedText>
                             <ScrollView
                                 horizontal
@@ -360,7 +362,7 @@ export default function PricesScreen() {
                                         fontWeight: '600',
                                         color: selectedCity === "" ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                                     }}>
-                                        تمام شہر
+                                        {t('prices.allCities')}
                                     </ThemedText>
                                 </TouchableOpacity>
 
@@ -389,7 +391,7 @@ export default function PricesScreen() {
                                 marginBottom: getSpacing('sm'),
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                فصل کی قسم
+                                {t('prices.cropType')}
                             </ThemedText>
                             <TouchableOpacity
                                 style={{
@@ -408,7 +410,7 @@ export default function PricesScreen() {
                                 <ThemedText style={{
                                     color: selectedCrop ? getColor(colorScheme, 'text') : getColor(colorScheme, 'outline')
                                 }}>
-                                    {getUrduCropName(selectedCrop) || 'فصل کی قسم منتخب کریں'}
+                                    {getUrduCropName(selectedCrop) || t('prices.selectCrop')}
                                 </ThemedText>
                                 <Ionicons name="chevron-down" size={20} color={getColor(colorScheme, 'outline')} />
                             </TouchableOpacity>
@@ -422,7 +424,7 @@ export default function PricesScreen() {
                                 marginBottom: getSpacing('sm'),
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                تاریخ
+                                {t('prices.date')}
                             </ThemedText>
                             <TouchableOpacity
                                 style={{
@@ -446,7 +448,7 @@ export default function PricesScreen() {
                                 }}>
                                     {selectedSpecificDate
                                         ? selectedSpecificDate.toLocaleDateString()
-                                        : 'تاریخ منتخب کریں'
+                                        : t('prices.selectDate')
                                     }
                                 </ThemedText>
                                 <Ionicons name="chevron-down" size={20} color={getColor(colorScheme, 'outline')} />
@@ -483,7 +485,7 @@ export default function PricesScreen() {
                             marginTop: getSpacing('md'),
                             color: getColor(colorScheme, 'text')
                         }}>
-                            فصلیں کی قیمتیں لوڈ ہو رہی ہیں...
+                            {t('prices.loading')}
                         </ThemedText>
                     </View>
                 ) : (
@@ -496,12 +498,12 @@ export default function PricesScreen() {
                                 justifyContent: 'space-between',
                                 marginBottom: getSpacing('sm')
                             }}>
-                                <ThemedText style={{
-                                    ...getTextStyle(colorScheme, 'heading'),
-                                    color: getColor(colorScheme, 'primary')
-                                }}>
-                                    {selectedCity ? getUrduCityName(cities.find(city => city._id === selectedCity)?.name || '') : 'تمام شہر'} مارکیٹ
-                                </ThemedText>
+                            <ThemedText style={{
+                                ...getTextStyle(colorScheme, 'heading'),
+                                color: getColor(colorScheme, 'primary')
+                            }}>
+                                {selectedCity ? getUrduCityName(cities.find(city => city._id === selectedCity)?.name || '') : t('prices.allCities')} {t('prices.cityMarket')}
+                            </ThemedText>
                                 <View style={{
                                     paddingHorizontal: getSpacing('sm'),
                                     paddingVertical: getSpacing('xs'),
@@ -513,7 +515,7 @@ export default function PricesScreen() {
                                         fontWeight: '600',
                                         color: getColor(colorScheme, 'buttonText')
                                     }}>
-                                        {cropPrices.length} قیمتوں والی فصلیں
+                                        {cropPrices.length} {t('prices.noOfCrops')}
                                     </ThemedText>
                                 </View>
                             </View>
@@ -521,7 +523,7 @@ export default function PricesScreen() {
                                 fontSize: 14,
                                 color: getColor(colorScheme, 'text')
                             }}>
-                                آخری تازہ کاری: {new Date().toLocaleDateString()}
+                                {t('prices.lastUpdated')}: {new Date().toLocaleDateString()}
                             </ThemedText>
                         </View>
 
@@ -542,8 +544,8 @@ export default function PricesScreen() {
                                             color: getColor(colorScheme, 'text')
                                         }}>
                                             {hasActiveFilters
-                                                ? 'آپ کے موجودہ فلٹرز سے کوئی فصل نہیں ملی'
-                                                : 'اس شہر میں قیمتوں والی کوئی فصل دستیاب نہیں'
+                                                ? t('prices.filterAdjustMessage')
+                                                : t('prices.noFiltersMessage')
                                             }
                                         </ThemedText>
                                         <ThemedText style={{
@@ -553,8 +555,8 @@ export default function PricesScreen() {
                                             marginTop: getSpacing('sm')
                                         }}>
                                             {hasActiveFilters
-                                                ? 'تمام نتائج دیکھنے کے لیے اپنے فلٹرز کو ایڈجسٹ کریں یا صاف کریں'
-                                                : 'مختلف شہر منتخب کریں یا بعد میں دوبارہ چیک کریں'
+                                                ? t('prices.filterAdjustMessage')
+                                                : t('prices.selectDifferentCity')
                                             }
                                         </ThemedText>
                                     </View>
@@ -656,7 +658,7 @@ export default function PricesScreen() {
                                                                 fontWeight: '600',
                                                                 letterSpacing: 0.5
                                                             }}>
-                                                                کم از کم قیمت
+                                                                {t('prices.minPrice')}
                                                             </ThemedText>
                                                             <ThemedText style={{
                                                                 fontSize: 20,
@@ -693,7 +695,7 @@ export default function PricesScreen() {
                                                                 fontWeight: '600',
                                                                 letterSpacing: 0.5
                                                             }}>
-                                                                زیادہ سے زیادہ قیمت
+                                                                {t('prices.maxPrice')}
                                                             </ThemedText>
                                                             <ThemedText style={{
                                                                 fontSize: 20,
@@ -731,7 +733,7 @@ export default function PricesScreen() {
                                                     fontSize: 14,
                                                     color: getColor(colorScheme, 'primary')
                                                 }}>
-                                                    تفصیلات کے لیے ٹیپ کریں
+                                                    {t('prices.tapForDetails')}
                                                 </ThemedText>
                                             </View>
                                         </TouchableOpacity>
@@ -906,13 +908,13 @@ export default function PricesScreen() {
                             alignItems: 'center',
                             marginBottom: getSpacing('lg')
                         }}>
-                            <ThemedText style={{
-                                fontSize: 20,
-                                fontWeight: 'bold',
-                                color: getColor(colorScheme, 'text')
-                            }}>
-                                فصل کی قسم منتخب کریں
-                            </ThemedText>
+                        <ThemedText style={{
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            color: getColor(colorScheme, 'text')
+                        }}>
+                            {t('prices.selectCrop')}
+                        </ThemedText>
                             <TouchableOpacity onPress={() => setShowCropModal(false)}>
                                 <Ionicons name="close" size={24} color={getColor(colorScheme, 'text')} />
                             </TouchableOpacity>
@@ -940,7 +942,7 @@ export default function PricesScreen() {
                                         fontSize: 16,
                                         color: selectedCrop === item ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
                                     }}>
-                                        {getUrduCropName(item) || 'تمام فصلیں۔'}
+                                        {getUrduCropName(item) || t('prices.allCrops')}
                                     </ThemedText>
                                 </TouchableOpacity>
                             )}
@@ -967,10 +969,10 @@ export default function PricesScreen() {
                                 }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: getSpacing('md'), marginBottom: getSpacing('sm') }}>
                                         <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                                            <ThemedText style={{ color: getColor(colorScheme, 'outline'), fontWeight: '600' }}>منسوخ</ThemedText>
+                                            <ThemedText style={{ color: getColor(colorScheme, 'outline'), fontWeight: '600' }}>{t('prices.cancel')}</ThemedText>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={onConfirmDateIOS}>
-                                            <ThemedText style={{ color: getColor(colorScheme, 'primary'), fontWeight: '600' }}>ٹھیک ہے</ThemedText>
+                                            <ThemedText style={{ color: getColor(colorScheme, 'primary'), fontWeight: '600' }}>{t('prices.confirm')}</ThemedText>
                                         </TouchableOpacity>
                                     </View>
                                     <DateTimePicker

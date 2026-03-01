@@ -5,20 +5,22 @@ import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Entypo, Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
+  const { t } = useTranslation();
 
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
         Alert.alert(
-          "Exit App",
+          t('common.confirm'),
           "Are you sure you want to exit?",
           [
-            { text: "Cancel", style: "cancel", onPress: () => {} },
-            { text: "Yes", onPress: () => BackHandler.exitApp() },
+            { text: t('common.cancel'), style: "cancel", onPress: () => {} },
+            { text: t('common.yes'), onPress: () => BackHandler.exitApp() },
           ],
           { cancelable: true }
         );
@@ -63,7 +65,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "بیماری کا پتہ لگانا",
+          title: t('tabs.home'),
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 40,
@@ -91,7 +93,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: "اے آئی چیٹ",
+          title: t('tabs.chat'),
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 40,
@@ -119,7 +121,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="prices"
         options={{
-          title: "فصلوں کی قیمتیں",
+          title: t('tabs.prices'),
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               width: 40,

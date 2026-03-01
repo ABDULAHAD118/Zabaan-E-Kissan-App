@@ -9,7 +9,7 @@ export const getColor = (colorScheme: ColorScheme, colorKey: keyof typeof Colors
 
 // Common style combinations
 export const getHeaderStyle = (colorScheme: ColorScheme) => ({
-  paddingTop: 56,
+  paddingTop: 50,
   paddingHorizontal: 16,
   paddingBottom: 16,
   backgroundColor: getColor(colorScheme, 'primary'),
@@ -194,7 +194,7 @@ export const getSectionStyle = (colorScheme: ColorScheme) => ({
   backgroundColor: getColor(colorScheme, 'background'),
 });
 
-export const getContentStyle = (colorScheme: ColorScheme) => ({
+export const getContentStyle = () => ({
   flex: 1,
   paddingHorizontal: 16,
 });
