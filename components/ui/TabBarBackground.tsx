@@ -9,14 +9,11 @@ export default function TabBarBackground() {
   return (
     <View 
       style={{
-        backgroundColor: colors.surface,
-        borderTopColor: colors.outline + '30',
-        borderTopWidth: 1,
+          backgroundColor: colors.highlight, // your desired color
+          borderRadius: 24,
+          flex: 1,
       }}
     />
   );
 }
 
-export function useBottomTabOverflow() {
-  return 0;
-}

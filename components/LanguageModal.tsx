@@ -45,7 +45,7 @@ export default function LanguageModal() {
           {/* Title */}
           <ThemedText style={[
             styles.title,
-            { color: getColor(colorScheme, 'onSurface') }
+            { color: getColor(colorScheme, 'primary') }
           ]}>
             {t('languageModal.title')}
           </ThemedText>
@@ -53,7 +53,7 @@ export default function LanguageModal() {
           {/* Subtitle */}
           <ThemedText style={[
             styles.subtitle,
-            { color: getColor(colorScheme, 'onSurfaceVariant') }
+            { color: getColor(colorScheme, 'secondary') }
           ]}>
             {t('languageModal.subtitle')}
           </ThemedText>
@@ -82,13 +82,7 @@ export default function LanguageModal() {
                 <View style={styles.languageTextContainer}>
                   <ThemedText style={[
                     styles.languageName,
-                    { color: getColor(colorScheme, 'onSurface') }
-                  ]}>
-                    English
-                  </ThemedText>
-                  <ThemedText style={[
-                    styles.languageLocal,
-                    { color: getColor(colorScheme, 'onSurfaceVariant') }
+                    { color: getColor(colorScheme, 'primary') }
                   ]}>
                     English
                   </ThemedText>
@@ -96,7 +90,7 @@ export default function LanguageModal() {
                 <Ionicons
                   name="chevron-forward"
                   size={24}
-                  color={getColor(colorScheme, 'onSurfaceVariant')}
+                  color={getColor(colorScheme, 'primary')}
                 />
               </View>
             </TouchableOpacity>
@@ -123,21 +117,15 @@ export default function LanguageModal() {
                 <View style={styles.languageTextContainer}>
                   <ThemedText style={[
                     styles.languageName,
-                    { color: getColor(colorScheme, 'onSurface') }
+                    { color: getColor(colorScheme, 'primary') }
                   ]}>
                     اردو
-                  </ThemedText>
-                  <ThemedText style={[
-                    styles.languageLocal,
-                    { color: getColor(colorScheme, 'onSurfaceVariant') }
-                  ]}>
-                    Urdu
                   </ThemedText>
                 </View>
                 <Ionicons
                   name="chevron-forward"
                   size={24}
-                  color={getColor(colorScheme, 'onSurfaceVariant')}
+                  color={getColor(colorScheme, 'primary')}
                 />
               </View>
             </TouchableOpacity>
@@ -209,7 +197,7 @@ const styles = StyleSheet.create({
     marginRight: getSpacing('md'),
   },
   flag: {
-    fontSize: 32,
+    fontSize: 25,
   },
   languageTextContainer: {
     flex: 1,

@@ -98,18 +98,18 @@ export const Colors = {
     textTertiary: '#94A3B8',
     
     // Border & Outline Colors
-    outline: '#475569',
-    outlineVariant: '#334155',
-    border: '#334155',
-    
+    outline: '#64748B',
+    outlineVariant: '#475569',
+    border: '#475569',
+
     // Interactive Colors
     button: '#10B981',
-    buttonText: '#0F172A',
+    buttonText: '#FFFFFF',
     buttonSecondary: '#334155',
-    buttonSecondaryText: '#CBD5E1',
-    
+    buttonSecondaryText: '#E2E8F0',
+
     // Highlight & Shadow Colors
-    highlight: '#064E3B',
+    highlight: '#1E3A32',
     shadow: '#000000',
     overlay: 'rgba(0, 0, 0, 0.7)',
     
