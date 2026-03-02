@@ -1,30 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
-  ScrollView, 
-  TextInput, 
-  TouchableOpacity, 
-  View, 
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { ThemedText } from "@/components/ThemedText";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import {ThemedText} from "@/components/ThemedText";
+import {useColorScheme} from "@/hooks/useColorScheme";
 import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import * as Speech from 'expo-speech';
-import {sendChatMessage, fetchChatHistory, sendChatMessageSocket} from "@/hooks/useApi";
+import {sendChatMessage, sendChatMessageSocket} from "@/hooks/useApi";
 import LocationPicker from "@/components/LocationPicker";
 import VoiceInput from "@/components/VoiceInput";
-import { useTranslation } from "react-i18next";
-import { generateUUID } from "@/utils/uuid";
+import {useTranslation} from "react-i18next";
+import {generateUUID} from "@/utils/uuid";
 import {
-  getContainerStyle,
-  getHeaderStyle,
-  getContentStyle,
-  getInputStyle,
-  getTextStyle,
-  getColor,
-  getSpacing
+    getColor,
+    getContainerStyle,
+    getContentStyle,
+    getHeaderStyle,
+    getSpacing,
+    getTextStyle
 } from "@/utils/styles";
 
 
@@ -40,40 +38,8 @@ export default function ChatScreen() {
   const { t } = useTranslation();
 
   const [threadId] = useState(() => {
-    const uuid = generateUUID();
-    console.log('Generated 36-character thread UUID:', uuid);
-    return uuid;
+      return generateUUID();
   });
-
-  // Load chat history on mount
-  useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        const history = await fetchChatHistory(threadId);
-        if (history.messages && history.messages.length > 0) {
-          // Convert history messages to our Message format
-          const loadedMessages: Message[] = history.messages
-            .filter(msg => msg.type === 'HumanMessage' || msg.type === 'AIMessage')
-            .map((msg, index) => ({
-              id: `history-${index}`,
-              text: msg.content,
-              isUser: msg.type === 'HumanMessage',
-              timestamp: new Date() // You might want to parse actual timestamps from API
-            }));
-          
-          // Only set if we have messages (don't override the welcome message if empty)
-          if (loadedMessages.length > 0) {
-            setMessages(loadedMessages);
-          }
-        }
-      } catch (error) {
-        // Silently fail - history might not exist for new threads
-        console.log('No chat history found or error loading:', error);
-      }
-    };
-
-    loadHistory();
-  }, [threadId]);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -85,18 +51,30 @@ export default function ChatScreen() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-
-  
-  // Location state
+    const scrollViewRef = useRef<ScrollView>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [locationAddress, setLocationAddress] = useState<string>("");
-  
-  // Streaming state
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+    const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+    const [dotCount, setDotCount] = useState(1);
 
+    useEffect(() => {
+        if (!isProcessing) return;
+
+        const interval = setInterval(() => {
+            setDotCount(prev => (prev % 6) + 1);
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, [isProcessing]);
+    useEffect(() => {
+        if (scrollViewRef.current) {
+            scrollViewRef.current.scrollToEnd({ animated: true });
+        }
+    }, [messages]);
+  
   const handleSend = async (useStreaming: boolean = true) => {
       if (!inputText.trim()) return;
 
@@ -114,7 +92,6 @@ export default function ChatScreen() {
 
       setMessages((prev) => [...prev, userMessage]);
       const aiMessageId = (Date.now() + 1).toString();
-      setStreamingMessageId(aiMessageId);
 
       setMessages((prev) => [
           ...prev,
@@ -129,7 +106,7 @@ export default function ChatScreen() {
               sendChatMessageSocket(
                   queryText,
                   threadId,
-                  (chunk, fullText) => {
+                  (_, fullText) => {
                       setMessages((prev) =>
                           prev.map((msg) =>
                               msg.id === aiMessageId ? { ...msg, text: fullText } : msg
@@ -143,12 +120,10 @@ export default function ChatScreen() {
                           )
                       );
                       setIsProcessing(false);
-                      setStreamingMessageId(null);
                   },
                   (error) => {
                       console.error("Streaming error:", error);
                       setIsProcessing(false);
-                      setStreamingMessageId(null);
                       setMessages((prev) =>
                           prev.map((msg) =>
                               msg.id === aiMessageId
@@ -163,7 +138,6 @@ export default function ChatScreen() {
                   }
               );
           } else {
-              // Fallback normal API
               const response = await sendChatMessage(queryText, threadId);
               setMessages((prev) =>
                   prev.map((msg) =>
@@ -173,7 +147,6 @@ export default function ChatScreen() {
                   )
               );
               setIsProcessing(false);
-              setStreamingMessageId(null);
           }
       } catch (error) {
           console.error("Chat API error:", error);
@@ -189,32 +162,47 @@ export default function ChatScreen() {
               )
           );
           setIsProcessing(false);
-          setStreamingMessageId(null);
       }
   };
 
-  const speakText = (text: string) => {
-    try {
-      // Detect if text contains Urdu/Arabic characters
-      const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
-      
-      // Stop any current speech first
-      Speech.stop();
-      
-      // Use appropriate language settings
-      const speechOptions = {
-        language: hasUrdu ? 'ur' : 'en',
-        pitch: 1.0,
-        rate: 0.8,
-        quality: 'default' as const,
-      };
-      
-      Speech.speak(text, speechOptions);
-    } catch (error) {
-      console.error('Speech error:', error);
-      Alert.alert('Speech Error', 'Unable to speak the text. Please try again.');
-    }
-  };
+    const speakText = async (text: string, messageId: string) => {
+        try {
+            // If clicking same message → stop it
+            if (speakingMessageId === messageId) {
+                await Speech.stop();
+                setSpeakingMessageId(null);
+                return;
+            }
+
+            await Speech.stop(); // stop any previous speech
+
+            const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+            const voices = await Speech.getAvailableVoicesAsync();
+
+            const selectedVoice = voices.find(v =>
+                hasUrdu
+                    ? v.language?.toLowerCase().includes('ur')
+                    : v.language?.toLowerCase().includes('en')
+            );
+
+            setSpeakingMessageId(messageId);
+
+            Speech.speak(text, {
+                voice: selectedVoice?.identifier,
+                language: hasUrdu ? 'ur-PK' : 'en-US',
+                pitch: 1,
+                rate: 1,
+
+                onDone: () => setSpeakingMessageId(null),
+                onStopped: () => setSpeakingMessageId(null),
+                onError: () => setSpeakingMessageId(null),
+            });
+
+        } catch (error) {
+            console.error('Speech error:', error);
+            setSpeakingMessageId(null);
+        }
+    };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
@@ -225,9 +213,10 @@ export default function ChatScreen() {
 
 
   return (
-    <KeyboardAvoidingView 
-      style={getContainerStyle(colorScheme)}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+        style={[getContainerStyle(colorScheme), { flex: 1 }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
       {/* Header */}
       <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('sm'),marginBottom: getSpacing('sm') }]}>
@@ -308,124 +297,122 @@ export default function ChatScreen() {
 
 
       {/* Messages */}
-      <ScrollView 
-        style={getContentStyle(colorScheme)}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: getSpacing('lg') }}
-      >
-        {messages.map((message) => (
-          <View
-            key={message.id}
-            style={{
-              marginBottom: getSpacing('md'),
-              alignItems: message.isUser ? 'flex-end' : 'flex-start'
-            }}
-          >
-            <View style={{
-              maxWidth: '80%',
-              padding: getSpacing('md'),
-              borderRadius: 20,
-              backgroundColor: message.isUser 
-                ? getColor(colorScheme, 'primary')
-                : getColor(colorScheme, 'surface'),
-              borderWidth: 1,
-              borderColor: message.isUser 
-                ? getColor(colorScheme, 'primary')
-                : getColor(colorScheme, 'outline'),
-              shadowColor: getColor(colorScheme, 'shadow'),
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }}>
-              {message.isUser ? (
-                <ThemedText style={{
-                  ...getTextStyle(colorScheme, 'body'),
-                  color: getColor(colorScheme, 'buttonText'),
-                  lineHeight: 20
-                }}>
-                  {message.text}
-                </ThemedText>
-              ) : (
-                <ThemedText>
-                  {message.text}
-                </ThemedText>
-              )}
-              
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: getSpacing('sm')
-              }}>
-                <ThemedText style={{
-                  fontSize: 12,
-                  color: message.isUser 
-                    ? getColor(colorScheme, 'buttonText')
-                    : getColor(colorScheme, 'textSecondary')
-                }}>
-                  {formatTime(message.timestamp)}
-                </ThemedText>
-                
-                {!message.isUser && (
-                  <TouchableOpacity
-                    onPress={() => speakText(message.text)}
+        <ScrollView
+            ref={scrollViewRef}
+            style={getContentStyle()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: getSpacing('md'), paddingBottom: getSpacing('lg') }}
+        >
+            {messages.map((message) => (
+                <View
+                    key={message.id}
                     style={{
-                      padding: getSpacing('xs'),
-                      marginLeft: getSpacing('sm')
+                        marginBottom: getSpacing('md'),
+                        flexDirection: 'row',
+                        justifyContent: message.isUser ? 'flex-end' : 'flex-start',
+                        paddingHorizontal: getSpacing('sm'),
                     }}
-                  >
-                    <Ionicons 
-                      name="volume-high" 
-                      size={16} 
-                      color={getColor(colorScheme, 'textSecondary')} 
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          </View>
-        ))}
+                >
+                    {/* Bubble */}
+                    <View
+                        style={{
+                            maxWidth: '75%',
+                            minWidth: '30%',
+                            backgroundColor: message.isUser
+                                ? getColor(colorScheme, 'primary')
+                                : getColor(colorScheme, 'highlight'),
+                            paddingVertical: getSpacing('sm'),
+                            paddingHorizontal: getSpacing('md'),
+                            borderWidth:1,
+                            borderColor: getColor(colorScheme,'border'),
+                            borderRadius: 20,
+                            borderTopLeftRadius: message.isUser ? 20 : 4,
+                            borderTopRightRadius: message.isUser ? 4 : 20,
 
-        {/* Processing Indicator */}
-        {isProcessing && (
-          <View style={{
-            marginBottom: getSpacing('md'),
-            alignItems: 'flex-start'
-          }}>
-            <View style={{
-              padding: getSpacing('md'),
-              borderRadius: 20,
-              backgroundColor: getColor(colorScheme, 'surface'),
-              borderWidth: 1,
-              borderColor: getColor(colorScheme, 'outline'),
-              flexDirection: 'row',
-              alignItems: 'center'
-            }}>
-              <View style={{
-                width: 16,
-                height: 16,
-                borderRadius: 8,
-                backgroundColor: getColor(colorScheme, 'primary'),
-                marginRight: getSpacing('sm')
-              }} />
-              <ThemedText style={{
-                ...getTextStyle(colorScheme, 'caption'),
-                color: getColor(colorScheme, 'textSecondary')
-              }}>
-                AI is thinking...
-              </ThemedText>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+                        }}
+                    >
+                        {/* Message Text / Dots */}
+                        {message.isUser ? (
+                            <ThemedText
+                                style={{
+                                    ...getTextStyle(colorScheme, 'body'),
+                                    color: getColor(colorScheme, 'buttonText'),
+                                    lineHeight: 22,
+                                }}
+                            >
+                                {message.text}
+                            </ThemedText>
+                        ) : (
+                            <ThemedText
+                                style={{
+                                    ...getTextStyle(colorScheme, 'body'),
+                                    color: getColor(colorScheme, 'primary'),
+                                    lineHeight: 22,
+                                }}
+                            >
+                                {message.text
+                                    ? message.text
+                                    : isProcessing &&
+                                    message.id === messages[messages.length - 1].id && (
+                                        <>
+                                            <ThemedText style={{ fontWeight: '600' }}>Thinking </ThemedText>
+                                            <ThemedText style={{ fontSize: 18, fontWeight: 'bold', letterSpacing: 2 }}>
+                                                {"•".repeat(dotCount)}
+                                            </ThemedText>
+                                        </>
+                                    )}
+                            </ThemedText>
+                        )}
+
+                        {/* Time + Volume Icon */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                marginTop: getSpacing('xs'),
+                            }}
+                        >
+                            <ThemedText
+                                style={{
+                                    fontSize: 11,
+                                    color: message.isUser
+                                        ? getColor(colorScheme, 'buttonText')
+                                        : getColor(colorScheme, 'textSecondary'),
+                                    marginRight: getSpacing('xs'),
+                                }}
+                            >
+                                {formatTime(message.timestamp)}
+                            </ThemedText>
+
+                            {!message.isUser && message.text && (
+                                <TouchableOpacity
+                                    onPress={() => speakText(message.text, message.id)}
+                                    style={{ padding: getSpacing('xs') }}
+                                >
+                                    <Ionicons
+                                        name={speakingMessageId === message.id ? "stop-circle" : "volume-high"}
+                                        size={18}
+                                        color={
+                                            speakingMessageId === message.id
+                                                ? getColor(colorScheme, 'error')
+                                                : getColor(colorScheme, 'primary')
+                                        }
+                                    />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            ))}
+        </ScrollView>
 
       {/* Input Section */}
       <View style={{
         padding: getSpacing('md'),
         backgroundColor: getColor(colorScheme, 'background'),
         borderTopWidth: 1,
-        borderTopColor: getColor(colorScheme, 'outline')
+        borderTopColor: getColor(colorScheme, 'inputBorder')
       }}>
         <View style={{
           flexDirection: 'row',
@@ -435,15 +422,20 @@ export default function ChatScreen() {
             style={{
               flex: 1,
               alignItems: 'center',
-              ...getInputStyle(colorScheme),
-              marginRight: getSpacing('sm')
+              backgroundColor: getColor(colorScheme,'highlight'),
+              marginRight: getSpacing('sm'),
+                borderRadius:10,
+                paddingHorizontal:15
             }}
             placeholder={t('chat.inputPlaceholder')}
             placeholderTextColor={getColor(colorScheme, 'outline')}
             value={inputText}
             onChangeText={setInputText}
-            
             multiline
+            numberOfLines={4}
+            autoFocus={true}
+            autoCorrect={false}
+            autoCapitalize="sentences"
             maxLength={500}
           />
 
@@ -464,9 +456,9 @@ export default function ChatScreen() {
             style={{
                 alignItems: 'center' as const,
                 justifyContent: 'center' as const,
-              width: 35,
-              height: 35,
-              borderRadius: 24,
+                width: 40,
+                height: 40,
+                borderRadius: 20,
                 backgroundColor:getColor(colorScheme,'primary')
             }}
             onPress={() => handleSend(true)}
@@ -475,7 +467,7 @@ export default function ChatScreen() {
           >
             <Ionicons 
               name="send" 
-              size={18}
+              size={20}
               color={getColor(colorScheme, 'buttonText')} 
             />
           </TouchableOpacity>

@@ -15,6 +15,7 @@ import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemedText } from '@/components/ThemedText';
+import { useTranslation } from 'react-i18next';
 import {
     getColor,
     getSpacing,
@@ -47,6 +48,7 @@ export default function LocationPicker({
                                            initialLocation,
                                        }: LocationPickerProps) {
     const colorScheme = useColorScheme() ?? 'light';
+    const { t } = useTranslation();
     const mapRef = useRef<MapView>(null);
 
     const [mapType, setMapType] = useState<
@@ -84,11 +86,11 @@ export default function LocationPicker({
 
             if (status !== 'granted') {
                 Alert.alert(
-                    'Permission Denied',
-                    'Enable location in settings to use this feature',
+                    t('location.permissionDenied'),
+                    t('location.enableLocationMessage'),
                     [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Open Settings', onPress: () => Linking.openSettings() },
+                        { text: t('location.cancel'), style: 'cancel' },
+                        { text: t('location.openSettings'), onPress: () => Linking.openSettings() },
                     ]
                 );
                 return;
@@ -106,7 +108,7 @@ export default function LocationPicker({
                 1000
             );
         } catch  {
-            Alert.alert('Error', 'Could not get current location');
+            Alert.alert(t('common.error'), t('location.couldNotGetLocation'));
         }
     };
 
@@ -136,7 +138,7 @@ export default function LocationPicker({
             const data: GeocodeResult[] = await response.json();
             setSearchResults(data);
         } catch {
-            Alert.alert('Error', 'Failed to search location.');
+            Alert.alert(t('common.error'), t('location.failedToSearchLocation'));
         } finally {
             setIsSearching(false);
         }

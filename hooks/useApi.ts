@@ -120,12 +120,8 @@ const fetchPrices = async (filters?: {
   if (queryParams.toString()) {
     url += `?${queryParams.toString()}`;
   }
-console.log('url',url)
     try {
-
-
         const response = await axios.get(url);
-        console.log(response)
         const data = response.data;
 
         if (data && data.data && Array.isArray(data.data) && data.pagination) {
@@ -142,24 +138,6 @@ console.log('url',url)
       console.error('Error fetching prices:', error.message || error);
       throw error;
     }
-};
-
-const searchPricesByCity = async (cityName: string): Promise<CropPrice[]> => {
-  if (!cityName.trim()) {
-    return [];
-  }
-
-  const url = `${API_ENDPOINTS.PRICES}?city=${encodeURIComponent(cityName)}`;
-  const response = await axios.get(url);
-  const data = response.data;
-  
-  if (data && data.data && Array.isArray(data.data)) {
-    return data.data;
-  } else if (data && Array.isArray(data)) {
-    return data;
-  } else {
-    return [];
-  }
 };
 
 export const sendChatMessage = async (message: string, threadId: string = 'default-thread'): Promise<ChatResponse> => {
@@ -236,17 +214,6 @@ export const sendChatMessageSocket = (
     }
 };
 
-export const fetchChatHistory = async (threadId: string): Promise<ChatHistory> => {
-  const response = await axios.get(`${API_ENDPOINTS.CHAT}/${threadId}/history`, {
-    headers: {
-      'accept': 'application/json',
-    }
-  });
-  
-  return response.data;
-};
-
-// Custom Hooks
 export const useCities = () => {
   return useQuery({
     queryKey: ['cities'],
@@ -255,6 +222,7 @@ export const useCities = () => {
     
   });
 };
+
 export const useCrops = () => {
   return useQuery({
     queryKey: ['crops'],
@@ -262,10 +230,6 @@ export const useCrops = () => {
     staleTime: 1000 * 60 * 30,
   });
 };
-
-
-
-
 
 export const usePrices = (filters?: {
   city?: string;
@@ -280,15 +244,5 @@ export const usePrices = (filters?: {
     enabled: true, // Always enabled to fetch prices
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
-  });
-};
-
-export const useSearchPrices = (searchQuery: string) => {
-  return useQuery({
-    queryKey: ['searchPrices', searchQuery],
-    queryFn: () => searchPricesByCity(searchQuery),
-    enabled: !!searchQuery.trim(),
-    staleTime: 1000 * 60 * 2, // 2 minutes for search results
-    gcTime: 1000 * 60 * 5, // 5 minutes
   });
 };
