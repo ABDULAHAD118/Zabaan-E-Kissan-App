@@ -120,18 +120,28 @@ const fetchPrices = async (filters?: {
   if (queryParams.toString()) {
     url += `?${queryParams.toString()}`;
   }
+console.log('url',url)
+    try {
 
-  const response = await axios.get(url);
-  const data = response.data;
 
-  if (data && data.data && Array.isArray(data.data) && data.pagination) {
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-  } else {
-    throw new Error('Invalid prices data format');
-  }
+        const response = await axios.get(url);
+        console.log(response)
+        const data = response.data;
+
+        if (data && data.data && Array.isArray(data.data) && data.pagination) {
+            return {
+                data: data.data,
+                pagination: data.pagination
+            };
+        } else {
+            throw new Error('Invalid prices data format');
+        }
+    }
+  catch (error) {
+      // @ts-ignore
+      console.error('Error fetching prices:', error.message || error);
+      throw error;
+    }
 };
 
 const searchPricesByCity = async (cityName: string): Promise<CropPrice[]> => {

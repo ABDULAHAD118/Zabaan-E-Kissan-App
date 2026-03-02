@@ -1,17 +1,18 @@
 import React, { useState } from "react";
-import { 
-  ScrollView, 
-  TouchableOpacity, 
-  View, 
-  Image,
-  Alert,
-  Modal,
-  StyleSheet
+import {
+    ScrollView,
+    TouchableOpacity,
+    View,
+    Image,
+    Alert,
+    Modal,
+    StyleSheet, StatusBar
 } from "react-native";
 import * as ImagePicker from 'expo-image-picker';
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, Entypo, MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import {
   getContainerStyle,
   getHeaderStyle,
@@ -24,6 +25,7 @@ import {
 
 export default function DiseaseDetectionScreen() {
   const colorScheme = useColorScheme() ?? "light";
+  const { t } = useTranslation();
 
   // State for image handling
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -40,7 +42,7 @@ export default function DiseaseDetectionScreen() {
     const openCamera = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== "granted") {
-            Alert.alert("Permission Required", "Camera permission is required to take photos.");
+            Alert.alert(t('home.permissionRequired'), t('home.cameraPermissionMessage'));
             return;
         }
 
@@ -64,7 +66,7 @@ export default function DiseaseDetectionScreen() {
     try {
       const hasPermission = await requestMediaLibraryPermission();
       if (!hasPermission) {
-        Alert.alert('Permission Required', 'Media library permission is required to select photos.');
+        Alert.alert(t('home.permissionRequired'), t('home.mediaPermissionMessage'));
         return;
       }
 
@@ -80,8 +82,8 @@ export default function DiseaseDetectionScreen() {
         setShowImageModal(true);
         setShowActionSheet(false);
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to open gallery. Please try again.');
+    } catch  {
+      Alert.alert(t('common.error'), t('home.errorMessage'));
     }
   };
 
@@ -101,10 +103,10 @@ export default function DiseaseDetectionScreen() {
     setTimeout(() => {
       setIsAnalyzing(false);
       Alert.alert(
-        'Analysis Complete',
-        'Disease detection analysis completed. Results will be displayed here.',
+        t('home.analysisComplete'),
+        t('home.analysisCompleteMessage'),
         [
-          { text: 'OK', onPress: () => setSelectedImage(null) }
+          { text: t('common.ok'), onPress: () => setSelectedImage(null) }
         ]
       );
     }, 3000);
@@ -124,9 +126,6 @@ export default function DiseaseDetectionScreen() {
       case 'Gallery':
         openGallery();
         break;
-      case 'Scan':
-        Alert.alert('Scan', 'Scan functionality will be implemented here');
-        break;
       default:
         Alert.alert('Quick Action', `${action} functionality will be implemented here`);
     }
@@ -145,10 +144,12 @@ export default function DiseaseDetectionScreen() {
   ];
 
   return (
-    <ScrollView 
-      style={getContainerStyle(colorScheme)}
-      showsVerticalScrollIndicator={false}
-    >
+
+        <View style={[getContainerStyle(colorScheme), { flex: 1 }]}>
+            <StatusBar
+                barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+                backgroundColor={getColor(colorScheme, 'primary')}
+            />
       {/* Header */}
       <View style={[getHeaderStyle(colorScheme), { paddingVertical: getSpacing('xs') }]}>
         <View style={{
@@ -173,12 +174,15 @@ export default function DiseaseDetectionScreen() {
               fontSize: 30,
               fontWeight: '600'
             }}>
-              Disease Detection
+              {t('home.title')}
             </ThemedText>
           </View>
         </View>
       </View>
-
+            <ScrollView
+                style={getContainerStyle(colorScheme)}
+                showsVerticalScrollIndicator={false}
+            >
       {/* Upload Section */}
       <View style={getSectionStyle(colorScheme)}>
         <TouchableOpacity
@@ -207,14 +211,14 @@ export default function DiseaseDetectionScreen() {
             marginBottom: getSpacing('sm'),
             color: getColor(colorScheme, 'text')
           }}>
-            Upload Crop Image
+            {t('home.uploadTitle')}
           </ThemedText>
           <ThemedText style={{
             ...getTextStyle(colorScheme, 'body'),
             textAlign: 'center',
             color: getColor(colorScheme, 'textSecondary')
           }}>
-            Take a photo or select from gallery to analyze crop health
+            {t('home.uploadDescription')}
           </ThemedText>
         </TouchableOpacity>
 
@@ -225,10 +229,9 @@ export default function DiseaseDetectionScreen() {
           marginBottom: getSpacing('lg')
         }}>
           {[
-            { icon: 'camera', title: 'Camera', color: getColor(colorScheme, 'primary') },
-            { icon: 'images', title: 'Gallery', color: getColor(colorScheme, 'secondary') },
-            { icon: 'scan', title: 'Scan', color: getColor(colorScheme, 'accent') }
-          ].map((action, index) => (
+            { icon: 'camera', title: t('home.camera'), action: 'Camera', color: getColor(colorScheme, 'primary') },
+            { icon: 'images', title: t('home.gallery'), action: 'Gallery', color: getColor(colorScheme, 'secondary') },
+          ].map((item, index) => (
             <TouchableOpacity
               key={index}
               style={{
@@ -241,16 +244,16 @@ export default function DiseaseDetectionScreen() {
                 borderColor: getColor(colorScheme, 'outline'),
                 alignItems: 'center'
               }}
-              onPress={() => handleQuickAction(action.title)}
+              onPress={() => handleQuickAction(item.action)}
               activeOpacity={0.7}
             >
-              <Ionicons name={action.icon as any} size={24} color={action.color} />
+              <Ionicons name={item.icon as any} size={24} color={item.color} />
               <ThemedText style={{
                 ...getTextStyle(colorScheme, 'caption'),
                 marginTop: getSpacing('xs'),
                 color: getColor(colorScheme, 'text')
               }}>
-                {action.title}
+                {item.title}
               </ThemedText>
             </TouchableOpacity>
           ))}
@@ -259,7 +262,7 @@ export default function DiseaseDetectionScreen() {
 
       {/* Content */}
         {/* Recent Scans */}
-        <View style={getCardStyle(colorScheme)}>
+        <View style={[getCardStyle(colorScheme),{marginHorizontal: getSpacing('md')}]}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -271,7 +274,7 @@ export default function DiseaseDetectionScreen() {
               marginLeft: getSpacing('sm'),
               color: getColor(colorScheme, 'text')
             }}>
-              Recent Scans
+              {t('home.recentScans')}
             </ThemedText>
           </View>
           
@@ -317,7 +320,7 @@ export default function DiseaseDetectionScreen() {
                   ...getTextStyle(colorScheme, 'caption'),
                   color: getColor(colorScheme, 'textSecondary')
                 }}>
-                  {scan.status} • {scan.date}
+                  {scan.status === 'Healthy' ? t('home.healthy') : t('home.diseaseDetected')} • {scan.date}
                 </ThemedText>
               </View>
               
@@ -340,7 +343,7 @@ export default function DiseaseDetectionScreen() {
         </View>
 
         {/* Common Diseases */}
-        <View style={getCardStyle(colorScheme)}>
+        <View style={[getCardStyle(colorScheme),{marginHorizontal: getSpacing('md')}]}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -352,7 +355,7 @@ export default function DiseaseDetectionScreen() {
               marginLeft: getSpacing('sm'),
               color: getColor(colorScheme, 'text')
             }}>
-              Common Diseases
+              {t('home.commonDiseases')}
             </ThemedText>
           </View>
           
@@ -424,7 +427,7 @@ export default function DiseaseDetectionScreen() {
         </View>
 
         {/* Tips Section */}
-        <View style={getCardStyle(colorScheme)}>
+        <View style={[getCardStyle(colorScheme),{marginHorizontal: getSpacing('md')}]}>
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
@@ -537,10 +540,10 @@ export default function DiseaseDetectionScreen() {
             
             <View style={styles.imageModalActions}>
               <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: getColor(colorScheme, 'outline') }]}
+                style={[styles.actionButton, { backgroundColor: getColor(colorScheme, 'error') }]}
                 onPress={() => setShowImageModal(false)}
               >
-                <ThemedText style={[styles.actionButtonText, { color: getColor(colorScheme, 'text') }]}>
+                <ThemedText style={[styles.actionButtonText, { color: getColor(colorScheme, 'buttonText') }]}>
                   Cancel
                 </ThemedText>
               </TouchableOpacity>
@@ -577,6 +580,7 @@ export default function DiseaseDetectionScreen() {
         </View>
       </Modal>
     </ScrollView>
+        </View>
   );
 }
 
