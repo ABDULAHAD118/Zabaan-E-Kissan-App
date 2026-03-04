@@ -59,10 +59,8 @@ export default function TabLayout() {
                     paddingHorizontal: 5,
                 },
                 tabBarLabelStyle: {
-                    fontSize: 12,
-                    fontWeight: '600',
+                    fontSize: 10,
                     marginTop: 4,
-                    letterSpacing: 0.2,
                 },
             }}
         >
@@ -70,6 +68,7 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     title: t('tabs.home'),
+
                     tabBarIcon: ({color, focused}) => (
                         <View style={{
                             width: 40,
@@ -126,6 +125,7 @@ export default function TabLayout() {
                 name="prices"
                 options={{
                     title: t('tabs.prices'),
+                    lazy: false,
                     tabBarIcon: ({color, focused}) => (
                         <View style={{
                             width: 40,

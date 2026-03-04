@@ -39,15 +39,14 @@ export default function SettingsScreen() {
     await setLanguage(langId);
   };
 
-  const handleDarkModeToggle = async () => {
-    const newMode = isDarkMode ? 'light' : 'dark';
-    await setThemeMode(newMode);
+  const handleDarkModeToggle = (nextValue: boolean) => {
+    void setThemeMode(nextValue ? 'dark' : 'light');
   };
 
   return (
     <View style={[getContainerStyle(colorScheme), { flex: 1 }]}>
       <StatusBar
-        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle="light-content"
         backgroundColor={getColor(colorScheme, 'primary')}
       />
 
@@ -334,4 +333,3 @@ export default function SettingsScreen() {
     </View>
   );
 }
-

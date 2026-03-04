@@ -57,7 +57,7 @@ export default function CropDetailScreen() {
   return (
     <View style={getContainerStyle(colorScheme)}>
       <StatusBar 
-        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle="light-content"
         backgroundColor={getColor(colorScheme, 'primary')}
       />
       
@@ -99,7 +99,7 @@ export default function CropDetailScreen() {
         </View>
       </View>
 
-      <ScrollView style={{...getContentStyle(colorScheme),paddingTop:10}} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{...getContentStyle(),paddingTop:10}} showsVerticalScrollIndicator={false}>
         {/* Crop Header Card */}
         <View style={getCardStyle(colorScheme)}>
           <View style={{
@@ -369,4 +369,3 @@ export default function CropDetailScreen() {
     </View>
   );
 }
-

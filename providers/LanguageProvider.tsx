@@ -26,14 +26,17 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const loadSavedLanguage = async () => {
     try {
-      // Check if AsyncStorage is available
       if (storageAvailable) {
         try {
-          const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
-          if (savedLanguage) {
-            setLanguageState(savedLanguage);
-            i18n.changeLanguage(savedLanguage);
-          }
+            const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+            if (savedLanguage) {
+                setLanguageState(savedLanguage);
+                i18n.changeLanguage(savedLanguage);
+                setShowLanguageModal(false);
+                return
+            } else {
+                setShowLanguageModal(true);
+            }
         } catch (storageError: any) {
           // Handle native module not available error gracefully
           if (storageError.message?.includes('Native module is null')) {
@@ -44,11 +47,9 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       }
-      // Always show modal on app start (every time)
       setShowLanguageModal(true);
     } catch (error) {
       console.error('Error in language initialization:', error);
-      // Still show modal even if there's an error
       setShowLanguageModal(true);
     } finally {
       setIsInitialized(true);
@@ -57,12 +58,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const setLanguage = async (lang: string) => {
     try {
-      // Only attempt to save if storage is available
       if (storageAvailable) {
         try {
           await AsyncStorage.setItem(LANGUAGE_KEY, lang);
         } catch (storageError: any) {
-          // Handle native module not available error gracefully
           if (storageError.message?.includes('Native module is null')) {
             console.warn('AsyncStorage native module not initialized, language not persisted');
             storageAvailable = false;

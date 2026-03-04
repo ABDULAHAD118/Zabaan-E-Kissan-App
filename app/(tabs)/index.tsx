@@ -147,7 +147,7 @@ export default function DiseaseDetectionScreen() {
 
         <View style={[getContainerStyle(colorScheme), {flex: 1}]}>
             <StatusBar
-                barStyle={colorScheme === 'dark' ? 'light-content' : 'light-content'}
+                barStyle="light-content"
                 backgroundColor={getColor(colorScheme, 'primary')}
             />
             {/* Header */}
@@ -697,4 +697,3 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 });
-

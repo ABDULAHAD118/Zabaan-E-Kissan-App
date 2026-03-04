@@ -1,125 +1,125 @@
-import { useQuery } from '@tanstack/react-query';
+import {useQuery, useQueryClient} from '@tanstack/react-query';
 import axios from 'axios';
-import { API_ENDPOINTS,ENV } from '@/env';
+import {API_ENDPOINTS, ENV} from '@/env';
 
 // Types
 export type CropPrice = {
-  _id: string;
-  city: string;
-  date: string;
-  crop: string;
-  min_price: string;
-  max_price: string;
-  fqp: string;
-  quantity: string;
-  scraped_at: string;
+    _id: string;
+    city: string;
+    date: string;
+    crop: string;
+    min_price: string;
+    max_price: string;
+    fqp: string;
+    quantity: string;
+    scraped_at: string;
 };
 
 export type City = {
-  _id: string;
-  name: string;
+    _id: string;
+    name: string;
 };
 
 export type Crop = {
-  _id: string;
-  name: string;
+    _id: string;
+    name: string;
 };
 
 // Chat API Types
 export type ChatMessage = {
-  query: string;
+    query: string;
 };
 
 export type ChatResponse = {
-  response: string;
-  field_analysis: any | null;
+    response: string;
+    field_analysis: any | null;
 };
 
 export type ChatHistoryMessage = {
-  type: 'HumanMessage' | 'AIMessage';
-  content: string;
+    type: 'HumanMessage' | 'AIMessage';
+    content: string;
 };
 
 export type ChatHistory = {
-  thread_id: string;
-  message_count: number;
-  messages: ChatHistoryMessage[];
+    thread_id: string;
+    message_count: number;
+    messages: ChatHistoryMessage[];
 };
 // API Functions
-const fetchCities = async (): Promise<City[]> => {
-  const response = await axios.get(API_ENDPOINTS.CITIES);
-  const data = response.data;
-  if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
-    return data.data.map((cityName: string, index: number) => ({
-      _id: `city_${index}`,
-      name: cityName
-    }));
-  } else {
-    throw new Error('Invalid cities data format');
-  }
+export const fetchCities = async (): Promise<City[]> => {
+    const response = await axios.get(API_ENDPOINTS.CITIES);
+    const data = response.data;
+    if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
+        return data.data.map((cityName: string, index: number) => ({
+            _id: `city_${index}`,
+            name: cityName
+        }));
+    } else {
+        throw new Error('Invalid cities data format');
+    }
 };
 
-const fetchCrops = async (): Promise<Crop[]> => {
-  const response = await axios.get(API_ENDPOINTS.CROPS);
-  const data = response.data;
-  if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
-    return data.data.map((cropName: string, index: number) => ({
-      _id: `crop_${index}`,
-      name: cropName
-    }));
-  } else {
-    throw new Error('Invalid crops data format');
-  }
+export const fetchCrops = async (): Promise<Crop[]> => {
+    const response = await axios.get(API_ENDPOINTS.CROPS);
+    const data = response.data;
+    if (data && data.status === 'success' && data.data && Array.isArray(data.data)) {
+        return data.data.map((cropName: string, index: number) => ({
+            _id: `crop_${index}`,
+            name: cropName
+        }));
+    } else {
+        throw new Error('Invalid crops data format');
+    }
 };
 
 
 export type PricesResponse = {
-  data: CropPrice[];
-  pagination: {
-    page: number;
-    limit: number;
-    total_pages: number;
-    total_records: number;
-    returned_records: number;
-    has_next: boolean;
-    has_prev: boolean;
-  };
+    data: CropPrice[];
+    pagination: {
+        page: number;
+        limit: number;
+        total_pages: number;
+        total_records: number;
+        returned_records: number;
+        has_next: boolean;
+        has_prev: boolean;
+    };
 };
 
-const fetchPrices = async (filters?: {
-  city?: string;
-  crop?: string;
-  date?: string;
-  page?: number;
-  limit?: number;
+export const fetchPrices = async (filters?: {
+    city?: string;
+    crop?: string;
+    date?: string;
+    page?: number;
+    limit?: number;
 }): Promise<PricesResponse> => {
-  let url = API_ENDPOINTS.PRICES;
-  const queryParams = new URLSearchParams();
+    let url = API_ENDPOINTS.PRICES;
+    const queryParams = new URLSearchParams();
 
-  if (filters?.city && filters.city.trim() !== '') {
-    queryParams.append('city', filters.city);
-  }
+    if (filters?.city && filters.city.trim() !== '') {
+        queryParams.append('city', filters.city);
+    }
 
-  if (filters?.crop && filters.crop.trim() !== '') {
-    queryParams.append('crop', filters.crop);
-  }
+    if (filters?.crop && filters.crop.trim() !== '') {
+        queryParams.append('crop', filters.crop);
+    }
 
-  if (filters?.date && filters.date.trim() !== '') {
-    queryParams.append('date', filters.date);
-  }
+    if (filters?.date && filters.date.trim() !== '') {
+        queryParams.append('date', filters.date);
+    }
 
-  // Add pagination parameters
-  if (filters?.page) {
-    queryParams.append('page', filters.page.toString());
-  }
+    // Add pagination parameters
+    if (filters?.page) {
+        queryParams.append('page', filters.page.toString());
+    }
 
-  if (filters?.limit) {
-    queryParams.append('limit', filters.limit.toString());
-  }
+    if (filters?.limit) {
+        queryParams.append('limit', filters.limit.toString());
+    }
 
-  if (queryParams.toString()) {
-    url += `?${queryParams.toString()}`;
-  }
+    if (queryParams.toString()) {
+        url += `?${queryParams.toString()}`;
+    }
     try {
         const response = await axios.get(url);
         const data = response.data;
@@ -132,25 +132,24 @@ const fetchPrices = async (filters?: {
         } else {
             throw new Error('Invalid prices data format');
         }
-    }
-  catch (error) {
-      // @ts-ignore
-      console.error('Error fetching prices:', error.message || error);
-      throw error;
+    } catch (error) {
+        // @ts-ignore
+        console.error('Error fetching prices:', error.message || error);
+        throw error;
     }
 };
 
 export const sendChatMessage = async (message: string, threadId: string = 'default-thread'): Promise<ChatResponse> => {
-  const response = await axios.post(`${API_ENDPOINTS.CHAT}/${threadId}`, {
-    query: message
-  }, {
-    headers: {
-      'accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  });
-  
-  return response.data;
+    const response = await axios.post(`${API_ENDPOINTS.CHAT}/${threadId}`, {
+        query: message
+    }, {
+        headers: {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+    });
+
+    return response.data;
 };
 
 // Streaming chat message function
@@ -162,34 +161,22 @@ export const sendChatMessageSocket = (
     onError?: (error: Error) => void
 ) => {
     try {
-        console.log("Connecting to:", `${ENV.SOCKET_URL}/chat/${threadId}`);
-
         const ws = new WebSocket(`${ENV.SOCKET_URL}/chat/${threadId}`);
 
-        let fullText = ""; // This is now the single source of truth
-
+        let fullText = "";
         ws.onopen = () => {
             console.log("✅ WebSocket connected");
-            // console.log("Sending message:", message);
-            ws.send(JSON.stringify({ query: message }));
+            ws.send(JSON.stringify({query: message}));
         };
 
         ws.onmessage = (event) => {
             try {
-                console.log("Received message:", event.data);
                 const data = JSON.parse(event.data);
-
-                // --- FIX: Logic for handling messages ---
-
-                // 1. If "response" exists, it's a chunk. Append it.
                 if (data.response) {
-                    fullText += data.response; // Backend now sends the space
+                    fullText += data.response;
                     onChunk(data.response, fullText);
                 }
-
-                // 2. If "done" exists, it's the end.
                 if (data.done) {
-                    // Use the locally accumulated fullText
                     onComplete?.(fullText.trim());
                     ws.close();
                 }
@@ -215,34 +202,45 @@ export const sendChatMessageSocket = (
 };
 
 export const useCities = () => {
-  return useQuery({
-    queryKey: ['cities'],
-    queryFn: fetchCities,
-    staleTime: 1000 * 60 * 30,
-    
-  });
+    return useQuery({
+        queryKey: ['cities'],
+        queryFn: fetchCities,
+        staleTime: 1000 * 60 * 30,
+
+    });
 };
 
 export const useCrops = () => {
-  return useQuery({
-    queryKey: ['crops'],
-    queryFn: fetchCrops,
-    staleTime: 1000 * 60 * 30,
-  });
+    return useQuery({
+        queryKey: ['crops'],
+        queryFn: fetchCrops,
+        staleTime: 1000 * 60 * 30,
+    });
 };
 
 export const usePrices = (filters?: {
-  city?: string;
-  crop?: string;
-  date?: string;
-  page?: number;
-  limit?: number;
+    city?: string;
+    crop?: string;
+    date?: string;
+    page?: number;
+    limit?: number;
 }) => {
-  return useQuery({
-    queryKey: ['prices', filters],
-    queryFn: () => fetchPrices(filters),
-    enabled: true, // Always enabled to fetch prices
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
-  });
+    const queryClient = useQueryClient();
+
+    // Check if we have active filters
+    const hasFilters = filters?.city || filters?.crop || filters?.date;
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 20;
+
+    return useQuery({
+        queryKey: ['prices', filters || {}],
+        queryFn: () => fetchPrices(filters),
+        initialData: !hasFilters ? () => {
+            const cachedData = queryClient.getQueryData(['prices', {page, limit}]);
+            return cachedData as PricesResponse | undefined;
+        } : undefined,
+        staleTime: 1000 * 60 * 30, // 30 minutes
+        gcTime: 1000 * 60 * 60, // 1 hour
+        enabled: true,
+    });
 };

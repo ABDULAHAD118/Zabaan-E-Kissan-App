@@ -227,7 +227,7 @@ export default function PricesScreen() {
     return (
         <View style={[getContainerStyle(colorScheme), {flex: 1}]}>
             <StatusBar
-                barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+                barStyle="light-content"
                 backgroundColor={getColor(colorScheme, 'primary')}
             />
             {/* Fixed Header */}
