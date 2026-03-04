@@ -37,9 +37,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const setThemeMode = async (mode: ThemeMode) => {
+    setThemeModeState(mode);
+
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
-      setThemeModeState(mode);
     } catch (error) {
       console.error('Failed to save theme preference:', error);
     }
@@ -67,4 +68,3 @@ export function useTheme() {
   }
   return context;
 }
-
