@@ -22,6 +22,7 @@ function RootLayoutContent() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="crop-detail" options={{ headerShown: false }} />
+      <Stack.Screen name="scan-detail" options={{ headerShown: false }} />
     </Stack>
   );
 }

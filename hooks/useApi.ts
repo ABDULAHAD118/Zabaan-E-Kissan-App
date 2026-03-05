@@ -45,6 +45,36 @@ export type ChatHistory = {
     message_count: number;
     messages: ChatHistoryMessage[];
 };
+
+// Disease Detection Types
+export type DiseaseDetectionResponse = {
+    predicted_class: string;
+    confidence_percent: number;
+    is_healthy: boolean;
+    status: string;
+    severity_range: string;
+    description: string;
+    description_ur: string;
+    recommended_action: string;
+    recommended_action_ur: string;
+    confidence_level: string;
+    top_3_predictions: {
+        class_name: string;
+        confidence: number;
+    }[];
+};
+
+export type DiseaseScanResult = DiseaseDetectionResponse & {
+    id: string;
+    timestamp: string;
+    imageUri: string;
+};
+
+export type DiseaseClassesResponse = {
+    total: number;
+    classes: string[];
+};
+
 // API Functions
 export const fetchCities = async (): Promise<City[]> => {
     const response = await axios.get(API_ENDPOINTS.CITIES);
@@ -244,3 +274,42 @@ export const usePrices = (filters?: {
         enabled: true,
     });
 };
+
+// Disease Detection API Functions
+export const detectDisease = async (imageUri: string): Promise<DiseaseDetectionResponse> => {
+    const formData = new FormData();
+
+    // Extract filename from URI
+    const filename = imageUri.split('/').pop() || 'image.jpg';
+
+    // Create file object for React Native
+    const file = {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: filename,
+    } as any;
+
+    formData.append('file', file);
+
+    const response = await axios.post(API_ENDPOINTS.PREDICT, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
+    return response.data;
+};
+
+export const fetchDiseaseClasses = async (): Promise<DiseaseClassesResponse> => {
+    const response = await axios.get(API_ENDPOINTS.CLASSES);
+    return response.data;
+};
+
+export const useDiseaseClasses = () => {
+    return useQuery({
+        queryKey: ['diseaseClasses'],
+        queryFn: fetchDiseaseClasses,
+        staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    });
+};
+

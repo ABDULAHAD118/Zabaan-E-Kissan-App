@@ -33,12 +33,12 @@ import {
     getSpacing
 } from "@/utils/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import {getDisplayPrice, getUrduCityName, getUrduCropName} from "@/utils/helper";
+import {getDisplayPrice, getUrduCityName, getCropName, getCityName} from "@/utils/helper";
 
 export default function PricesScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme() ?? "light";
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const [selectedCity, setSelectedCity] = useState<string>("");
     const [selectedCrop, setSelectedCrop] = useState<string>("");
     const [selectedDateRange, setSelectedDateRange] = useState<string>("");
@@ -377,12 +377,12 @@ export default function PricesScreen() {
                                             setShowFilters(!showFilters)
                                         }}
                                     >
-                                        <ThemedText style={{
-                                            fontWeight: '600',
-                                            color: selectedCity === city._id ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
-                                        }}>
-                                            {getUrduCityName(city.name)}
-                                        </ThemedText>
+                                    <ThemedText style={{
+                                        fontWeight: '600',
+                                        color: selectedCity === city._id ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
+                                    }}>
+                                        {getCityName(city.name, i18n.language)}
+                                    </ThemedText>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -415,7 +415,7 @@ export default function PricesScreen() {
                                 <ThemedText style={{
                                     color: selectedCrop ? getColor(colorScheme, 'text') : getColor(colorScheme, 'outline')
                                 }}>
-                                    {getUrduCropName(selectedCrop) || t('prices.selectCrop')}
+                                    {getCropName(selectedCrop, i18n.language) || t('prices.selectCrop')}
                                 </ThemedText>
                                 <Ionicons name="chevron-down" size={20} color={getColor(colorScheme, 'outline')}/>
                             </TouchableOpacity>
@@ -591,7 +591,7 @@ export default function PricesScreen() {
                                                         marginBottom: getSpacing('xs'),
                                                         color: getColor(colorScheme, 'text')
                                                     }}>
-                                                        {getUrduCropName(crop.crop)}
+                                                        {getCropName(crop.crop, i18n.language)}
                                                     </ThemedText>
 
                                                     <View style={{
@@ -607,7 +607,7 @@ export default function PricesScreen() {
                                                             fontWeight: '600',
                                                             color: getColor(colorScheme, 'text')
                                                         }}>
-                                                            {getUrduCityName(crop.city)}
+                                                            {getCityName(crop.city, i18n.language)}
                                                         </ThemedText>
                                                     </View>
                                                 </View>
@@ -947,7 +947,7 @@ export default function PricesScreen() {
                                         fontSize: 16,
                                         color: selectedCrop === item ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'text')
                                     }}>
-                                        {getUrduCropName(item) || t('prices.allCrops')}
+                                        {getCropName(item, i18n.language) || t('prices.allCrops')}
                                     </ThemedText>
                                 </TouchableOpacity>
                             )}

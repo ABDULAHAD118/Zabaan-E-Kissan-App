@@ -55,6 +55,29 @@ export const getDisplayPrice = (item: CropPrice) => {
 const normalize = (text: string) =>
   text.replace(/\s+/g, " ").trim();
 
+// Get crop name in the specified language or current app language
+export const getCropName = (crop: string, language: string = 'en'): string => {
+    const cleaned = normalize(getCleanCropName(crop));
+
+    if (language === 'ur') {
+        return (cropTranslations as Record<string, string>)[cleaned] || cleaned;
+    }
+
+    // For English, return the original cleaned name
+    return cleaned;
+};
+
+// Get city name in the specified language or current app language
+export const getCityName = (city: string, language: string = 'en'): string => {
+    if (language === 'ur') {
+        return (cityTranslations as Record<string, string>)[city] || city;
+    }
+
+    // For English, return the original city name
+    return city;
+};
+
+// Legacy functions for backward compatibility
 export const getUrduCropName = (crop: string) => {
     const cleaned = normalize(getCleanCropName(crop));
    return (cropTranslations as Record<string, string>)[cleaned] || cleaned;

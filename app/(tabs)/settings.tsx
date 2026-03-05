@@ -1,11 +1,12 @@
-import React from "react";
-import { ScrollView, Switch, TouchableOpacity, View, StatusBar } from "react-native";
+import React, {useState} from "react";
+import { ScrollView, Switch, TouchableOpacity, View, StatusBar, Alert } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useTheme } from "@/providers/ThemeProvider";
 import { useLanguage } from "@/providers/LanguageProvider";
 import { useTranslation } from "react-i18next";
+import { clearRecentScans } from "@/utils/storage";
 import {
   getContainerStyle,
   getHeaderStyle,
@@ -33,6 +34,7 @@ export default function SettingsScreen() {
   const { setThemeMode, isDarkMode } = useTheme();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
+  const [isClearing, setIsClearing] = useState(false);
 
 
   const handleLanguageChange = async (langId: string) => {
@@ -41,6 +43,34 @@ export default function SettingsScreen() {
 
   const handleDarkModeToggle = (nextValue: boolean) => {
     void setThemeMode(nextValue ? 'dark' : 'light');
+  };
+
+  const handleClearRecentScans = () => {
+    Alert.alert(
+      t('settings.clearRecentScans'),
+      t('settings.clearRecentScansMessage'),
+      [
+        {
+          text: t('common.cancel'),
+          style: 'cancel'
+        },
+        {
+          text: t('settings.clear'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsClearing(true);
+              await clearRecentScans();
+              Alert.alert(t('common.success'), t('settings.recentScansCleared'));
+            } catch  {
+              Alert.alert(t('common.error'), t('settings.recentScansClearFailed'));
+            } finally {
+              setIsClearing(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -258,6 +288,81 @@ export default function SettingsScreen() {
               />
             </View>
           </View>
+        </View>
+
+        {/* Data & Storage Section */}
+        <View style={getSectionStyle(colorScheme)}>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: getSpacing('md')
+          }}>
+            <View style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: getColor(colorScheme, 'highlight'),
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: getSpacing('sm')
+            }}>
+              <Ionicons name="server" size={18} color={getColor(colorScheme, 'primary')} />
+            </View>
+            <ThemedText style={{
+              ...getTextStyle(colorScheme, 'subtitle'),
+              fontWeight: '600',
+              color: getColor(colorScheme, 'text')
+            }}>
+              {t('settings.dataStorage')}
+            </ThemedText>
+          </View>
+
+          <TouchableOpacity
+            style={getCardStyle(colorScheme)}
+            onPress={handleClearRecentScans}
+            activeOpacity={0.7}
+            disabled={isClearing}
+          >
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                flex: 1
+              }}>
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: getColor(colorScheme, 'highlight'),
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: getSpacing('sm')
+                }}>
+                  <Ionicons name="trash-outline" size={20} color={getColor(colorScheme, 'error')} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ThemedText style={{
+                    ...getTextStyle(colorScheme, 'body'),
+                    fontWeight: '600',
+                    color: getColor(colorScheme, 'text')
+                  }}>
+                    {t('settings.clearRecentScans')}
+                  </ThemedText>
+                  <ThemedText style={{
+                    fontSize: 14,
+                    color: getColor(colorScheme, 'outline')
+                  }}>
+                    {t('settings.clearRecentScansSubtitle')}
+                  </ThemedText>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={getColor(colorScheme, 'outline')} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* About Section */}

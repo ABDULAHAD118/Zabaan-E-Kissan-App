@@ -41,7 +41,7 @@ export default function TabLayout() {
             );
 
             return () => subscription.remove();
-        }, [])
+        }, [t])
     );
 
     return (
@@ -50,6 +50,7 @@ export default function TabLayout() {
                 tabBarActiveTintColor: colors.primary,
                 tabBarInactiveTintColor: colors.buttonSecondaryText,
                 headerShown: false,
+                lazy: false,
                 tabBarStyle: {
                     shadowColor: 'transparent',
                     backgroundColor: colors.background,

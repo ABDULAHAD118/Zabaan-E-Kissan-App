@@ -184,8 +184,6 @@ export default function ChatScreen() {
 
             const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
 
-            setPreparingMessageId(null);
-            setSpeakingMessageId(messageId);
             Speech.speak(text, {
                 voice: 'ur-In-language',
                 language: hasUrdu ? 'ur-PK' : 'en-US',
