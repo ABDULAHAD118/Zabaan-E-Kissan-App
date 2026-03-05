@@ -12,7 +12,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.abdulahad0118.zabaanekisaan",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby agricultural services.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Location helps farmers find nearby resources."
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyCQGJsBgJBOPHiiSV8xBVpESPm1RHyd7dM"
       }
     },
     "android": {
