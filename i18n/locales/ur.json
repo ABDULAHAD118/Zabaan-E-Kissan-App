@@ -220,6 +220,9 @@
     "pricePerKg": "قیمت فی کلوگرام",
     "pricePerMarla": "قیمت فی مرلہ",
     "pricePerUnit": "قیمت فی یونٹ"
+  },
+  "scanDetail": {
+    "askChatbot": "مزید تفصیل کے لیے AI سے پوچھیں"
   }
 }
 

@@ -220,6 +220,9 @@
     "pricePerKg": "Price per Kg",
     "pricePerMarla": "Price per Marla",
     "pricePerUnit": "Price per Unit"
+  },
+  "scanDetail": {
+    "askChatbot": "Ask AI For More Details"
   }
 }
 

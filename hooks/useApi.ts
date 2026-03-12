@@ -47,6 +47,16 @@ export type ChatHistory = {
     messages: ChatHistoryMessage[];
 };
 
+export type TranscribeAudioPayload = {
+    uri: string;
+    language: 'english' | 'urdu';
+};
+
+export type TranscribeAudioResponse = {
+    transcript?: string;
+    text?: string;
+};
+
 // Disease Detection Types
 export type DiseaseDetectionResponse = {
     predicted_class: string;
@@ -186,6 +196,30 @@ export const sendChatMessage = async (
     });
 
     return response.data;
+};
+
+export const transcribeAudio = async ({uri, language}: TranscribeAudioPayload): Promise<string> => {
+    const formData = new FormData();
+    formData.append('audio', {
+        uri,
+        type: 'audio/mp4',
+        name: 'recording.m4a',
+    } as any);
+    formData.append('language', language);
+
+    const response = await axios.post<TranscribeAudioResponse>(API_ENDPOINTS.TRANSCRIBE, formData, {
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+
+    const transcribedText = response.data?.transcript || response.data?.text;
+    if (!transcribedText?.trim()) {
+        throw new Error('Empty transcription');
+    }
+
+    return transcribedText.trim();
 };
 
 // Streaming chat message function

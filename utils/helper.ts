@@ -18,14 +18,23 @@ const convertTo1Kg = (price: string | number) => {
 };
 
 // ✅ Get Display Price (Smart Logic)
-export const getDisplayPrice = (item: CropPrice) => {
+const getUnitLabel = (unit: string, language: string) => {
+    const isUrdu = language === 'ur';
+
+    if (unit === '100KG') return isUrdu ? 'فی کلو' : 'per kg';
+    if (unit === 'DOZEN') return isUrdu ? 'فی درجن' : 'per dozen';
+    if (unit === '100PCS') return isUrdu ? 'فی 100 عدد' : 'per 100 pcs';
+    return '';
+};
+
+export const getDisplayPrice = (item: CropPrice, language: string = 'en') => {
     const unit = getUnit(item.crop);
 
     if (unit === "100KG") {
         return {
             min: convertTo1Kg(item.min_price),
             max: convertTo1Kg(item.max_price),
-            unitLabel: " فی کلو"
+            unitLabel: getUnitLabel(unit, language)
         };
     }
 
@@ -33,7 +42,7 @@ export const getDisplayPrice = (item: CropPrice) => {
         return {
             min: item.min_price,
             max: item.max_price,
-            unitLabel: "فی درجن"
+            unitLabel: getUnitLabel(unit, language)
         };
     }
 
@@ -41,7 +50,7 @@ export const getDisplayPrice = (item: CropPrice) => {
         return {
             min: item.min_price,
             max: item.max_price,
-            unitLabel: "فی 100 عدد"
+            unitLabel: getUnitLabel(unit, language)
         };
     }
 

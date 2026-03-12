@@ -29,6 +29,52 @@ export default function ScanDetailScreen() {
     // Parse the scan data from params
     const detectionResult: DiseaseScanResult | null = params.scan ? JSON.parse(decodeURIComponent(params.scan as string)) : null;
 
+    const buildScanPrompt = (scan: DiseaseScanResult) => {
+        const cropDisease = scan.predicted_class.replace(/_/g, ' ');
+        const topPredictions = scan.top_3_predictions
+            .map((prediction, index) => `${index + 1}. ${prediction.class_name.replace(/_/g, ' ')} (${prediction.confidence.toFixed(2)}%)`)
+            .join('\n');
+
+        if (i18n.language === 'ur') {
+            return [
+                `میری فصل اسکین رپورٹ کی تفصیل:`,
+                `بیماری: ${cropDisease}`,
+                `اعتماد: ${scan.confidence_percent.toFixed(2)}%`,
+                `حیثیت: ${scan.status}`,
+                `شدت: ${scan.severity_range}`,
+                `تفصیل: ${scan.description_ur || scan.description}`,
+                `تجویز کردہ اقدام: ${scan.recommended_action_ur || scan.recommended_action}`,
+                `ٹاپ پیش گوئیاں:\n${topPredictions}`,
+                `براہ کرم کسان کے لیے آسان زبان میں مکمل رہنمائی دیں: وجہ، فوری علاج، اگلے 7 دن کا پلان، اور احتیاطی تدابیر۔`,
+            ].join('\n');
+        }
+
+        return [
+            `Here are my crop scan details:`,
+            `Detected disease: ${cropDisease}`,
+            `Confidence: ${scan.confidence_percent.toFixed(2)}%`,
+            `Status: ${scan.status}`,
+            `Severity: ${scan.severity_range}`,
+            `Description: ${scan.description}`,
+            `Recommended action: ${scan.recommended_action}`,
+            `Top predictions:\n${topPredictions}`,
+            `Please explain this in simple farmer-friendly language: cause, immediate treatment, next 7-day plan, and prevention steps.`,
+        ].join('\n');
+    };
+
+    const handleAskChatbot = () => {
+        if (!detectionResult) return;
+
+        const prompt = buildScanPrompt(detectionResult);
+        router.push({
+            pathname: '/(tabs)/chat',
+            params: {
+                scanPrompt: prompt,
+                scanNonce: `${detectionResult.id || Date.now()}`,
+            }
+        });
+    };
+
     if (!detectionResult) {
         return (
             <View style={[getContainerStyle(colorScheme), {flex: 1, justifyContent: 'center', alignItems: 'center'}]}>
@@ -182,6 +228,31 @@ export default function ScanDetailScreen() {
                             </View>
                         ))}
                     </View>
+
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: getColor(colorScheme, 'primary'),
+                            borderRadius: 12,
+                            paddingVertical: getSpacing('md'),
+                            paddingHorizontal: getSpacing('md'),
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: getSpacing('lg')
+                        }}
+                        activeOpacity={0.8}
+                        onPress={handleAskChatbot}
+                    >
+                        <Ionicons name="chatbubble-ellipses" size={18} color={getColor(colorScheme, 'buttonText')} />
+                        <ThemedText style={{
+                            ...getTextStyle(colorScheme, 'body'),
+                            color: getColor(colorScheme, 'buttonText'),
+                            fontWeight: '700',
+                            marginLeft: getSpacing('sm')
+                        }}>
+                            {t('scanDetail.askChatbot')}
+                        </ThemedText>
+                    </TouchableOpacity>
 
                     {/* Spacer */}
                     <View style={{height: getSpacing('lg')}} />

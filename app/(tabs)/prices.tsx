@@ -33,7 +33,7 @@ import {
     getSpacing
 } from "@/utils/styles";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import {getDisplayPrice, getUrduCityName, getCropName, getCityName} from "@/utils/helper";
+import {getDisplayPrice, getCropName, getCityName} from "@/utils/helper";
 
 export default function PricesScreen() {
     const router = useRouter();
@@ -507,7 +507,7 @@ export default function PricesScreen() {
                                     ...getTextStyle(colorScheme, 'heading'),
                                     color: getColor(colorScheme, 'primary')
                                 }}>
-                                    {selectedCity ? getUrduCityName(cities.find(city => city._id === selectedCity)?.name || '') : t('prices.allCities')} {t('prices.cityMarket')}
+                                    {selectedCity ? getCityName(cities.find(city => city._id === selectedCity)?.name || '', i18n.language) : t('prices.allCities')} {t('prices.cityMarket')}
                                 </ThemedText>
                                 <View style={{
                                     paddingHorizontal: getSpacing('sm'),
@@ -641,7 +641,7 @@ export default function PricesScreen() {
 
                                             {/* Price Display - Min/Max Only */}
                                             {(() => {
-                                                const priceData = getDisplayPrice(crop);
+                                                const priceData = getDisplayPrice(crop, i18n.language);
                                                 return (
                                                     <View style={{
                                                         flexDirection: 'row',

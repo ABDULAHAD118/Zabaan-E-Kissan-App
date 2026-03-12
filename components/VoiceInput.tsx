@@ -5,6 +5,7 @@ import { ThemedText } from './ThemedText';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { getColor, getSpacing } from '@/utils/styles';
 import { useTranslation } from 'react-i18next';
+import {useMutation} from '@tanstack/react-query';
 import {
     useAudioRecorder,
     useAudioRecorderState,
@@ -12,8 +13,8 @@ import {
     RecordingPresets,
     setAudioModeAsync,
 } from 'expo-audio';
-import * as FileSystem from 'expo-file-system';
-import { API_ENDPOINTS } from "@/env";
+import {useLanguage} from '@/providers/LanguageProvider';
+import {transcribeAudio as transcribeAudioApi} from '@/hooks/useApi';
 
 interface VoiceInputProps {
     onTranscript: (text: string) => void;
@@ -23,11 +24,28 @@ interface VoiceInputProps {
 export default function VoiceInput({ onTranscript, disabled = false }: VoiceInputProps) {
     const colorScheme = useColorScheme() ?? 'light';
     const { t } = useTranslation();
+    const {language} = useLanguage();
 
     const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
     const recorderState = useAudioRecorderState(audioRecorder);
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const apiLanguage: 'english' | 'urdu' = language === 'ur' ? 'urdu' : 'english';
+
+    const transcribeMutation = useMutation({
+        mutationFn: (uri: string) => transcribeAudioApi({uri, language: apiLanguage}),
+        onSuccess: (transcribedText) => {
+            onTranscript(transcribedText);
+            setIsProcessing(false);
+        },
+        onError: (error: any) => {
+            Alert.alert(
+                t('common.error'),
+                error?.message || t('chat.voiceTranscriptionFailed')
+            );
+            setIsProcessing(false);
+        }
+    });
 
     useEffect(() => {
         (async () => {
@@ -49,7 +67,7 @@ export default function VoiceInput({ onTranscript, disabled = false }: VoiceInpu
                 allowsRecording: true,
             });
         })();
-    }, []);
+    }, [t]);
 
     const startRecording = async () => {
         try {
@@ -73,53 +91,10 @@ export default function VoiceInput({ onTranscript, disabled = false }: VoiceInpu
             const uri = audioRecorder.uri;
             if (!uri) throw new Error('No recording URI');
 
-            await transcribeAudio(uri);
+            transcribeMutation.mutate(uri);
         } catch {
             setIsProcessing(false);
             Alert.alert(t('common.error'), t('chat.failedToStopRecording'));
-        }
-    };
-
-    const transcribeAudio = async (uri: string) => {
-        try {
-            const formData = new FormData();
-            const language = 'ur';
-
-            const fileInfo = await FileSystem.getInfoAsync(uri);
-            if (!fileInfo.exists) throw new Error('Recording file not found');
-
-            formData.append('audio', {
-                uri,
-                type: 'audio/mp4',
-                name: 'recording.m4a',
-            } as any);
-
-            formData.append('language', language);
-
-            const response = await fetch(API_ENDPOINTS.TRANSCRIBE, {
-                method: 'POST',
-                body: formData,
-                headers: { Accept: 'application/json' },
-            });
-
-            const textResponse = await response.text();
-            if (!response.ok) throw new Error(`API error: ${response.status}`);
-
-            const result = JSON.parse(textResponse);
-            const transcribedText = result.transcript || result.text;
-
-            if (transcribedText?.trim()) {
-                onTranscript(transcribedText.trim());
-            } else {
-                throw new Error('Empty transcription');
-            }
-        } catch (error: any) {
-            Alert.alert(
-                t('common.error'),
-                error.message || t('chat.voiceTranscriptionFailed')
-            );
-        } finally {
-            setIsProcessing(false);
         }
     };
 
@@ -192,7 +167,7 @@ export default function VoiceInput({ onTranscript, disabled = false }: VoiceInpu
                         />
 
                         <ThemedText style={{ marginVertical: 20 }}>
-                            {isProcessing ? 'Processing...' : t('chat.listening')}
+                            {isProcessing ? t('common.loading') : t('chat.listening')}
                         </ThemedText>
 
                         <TouchableOpacity

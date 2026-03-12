@@ -38,8 +38,6 @@ export default function DiseaseDetectionScreen() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [showImageModal, setShowImageModal] = useState(false);
     const [showActionSheet, setShowActionSheet] = useState(false);
-    const [showResultModal, setShowResultModal] = useState(false);
-    const [detectionResult, setDetectionResult] = useState<DiseaseScanResult | null>(null);
     const [recentScans, setRecentScans] = useState<DiseaseScanResult[]>([]);
 
     useEffect(() => {
@@ -63,9 +61,13 @@ export default function DiseaseDetectionScreen() {
 
             await saveRecentScan(scanResult);
             await loadRecentScans();
-
-            setDetectionResult(scanResult);
-            setShowResultModal(true);
+            setSelectedImage(null);
+            router.push({
+                pathname: '/scan-detail',
+                params: {
+                    scan: encodeURIComponent(JSON.stringify(scanResult))
+                }
+            });
         },
         onError: (error) => {
             console.error('Detection error:', error);
@@ -297,85 +299,6 @@ export default function DiseaseDetectionScreen() {
                     </View>
                 </Modal>
 
-                <Modal visible={showResultModal} transparent animationType="slide" onRequestClose={() => setShowResultModal(false)}>
-                    <View style={styles.modalOverlay}>
-                        <ScrollView style={{flex: 1}} contentContainerStyle={{justifyContent: 'flex-end', minHeight: '100%'}}>
-                            <View style={[styles.resultModal, {backgroundColor: getColor(colorScheme, 'surface')}]}>
-                                <View style={styles.resultModalHeader}>
-                                    <ThemedText style={[styles.resultModalTitle, {color: getColor(colorScheme, 'text')}]}>{t('home.detectionResult')}</ThemedText>
-                                    <TouchableOpacity onPress={() => {setShowResultModal(false); setSelectedImage(null);}}>
-                                        <Ionicons name="close" size={24} color={getColor(colorScheme, 'outline')}/>
-                                    </TouchableOpacity>
-                                </View>
-
-                                {detectionResult && (
-                                    <View style={{padding: getSpacing('md')}}>
-                                        {detectionResult.imageUri && <Image source={{uri: detectionResult.imageUri}} style={{width: '100%', height: 200, borderRadius: 12, marginBottom: getSpacing('md')}} />}
-
-                                        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: getSpacing('lg')}}>
-                                            <View style={{flex: 1, padding: getSpacing('md'), borderRadius: 12, backgroundColor: detectionResult.is_healthy ? getColor(colorScheme, 'success') : getColor(colorScheme, 'warning')}}>
-                                                <ThemedText style={{fontSize: 24, fontWeight: 'bold', color: getColor(colorScheme, 'buttonText'), textAlign: 'center'}}>{detectionResult.status}</ThemedText>
-                                            </View>
-                                        </View>
-
-                                        <View style={{marginBottom: getSpacing('md')}}>
-                                            <ThemedText style={{...getTextStyle(colorScheme, 'caption'), color: getColor(colorScheme, 'textSecondary'), marginBottom: getSpacing('xs')}}>Detected Disease</ThemedText>
-                                            <ThemedText style={{...getTextStyle(colorScheme, 'heading'), color: getColor(colorScheme, 'text')}}>{detectionResult.predicted_class.replace(/_/g, ' ')}</ThemedText>
-                                        </View>
-
-                                        <View style={{marginBottom: getSpacing('md')}}>
-                                            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: getSpacing('xs')}}>
-                                                <ThemedText style={{...getTextStyle(colorScheme, 'caption'), color: getColor(colorScheme, 'textSecondary')}}>{t('home.confidenceLevel')}</ThemedText>
-                                                <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '600', color: getColor(colorScheme, 'primary')}}>{detectionResult.confidence_percent.toFixed(2)}%</ThemedText>
-                                            </View>
-                                            <View style={{height: 8, backgroundColor: getColor(colorScheme, 'outline'), borderRadius: 4, overflow: 'hidden'}}>
-                                                <View style={{height: '100%', width: `${detectionResult.confidence_percent}%`, backgroundColor: getColor(colorScheme, 'primary')}}/>
-                                            </View>
-                                        </View>
-
-                                        {!detectionResult.is_healthy && (
-                                            <View style={{marginBottom: getSpacing('md')}}>
-                                                <ThemedText style={{...getTextStyle(colorScheme, 'caption'), color: getColor(colorScheme, 'textSecondary'), marginBottom: getSpacing('xs')}}>{t('home.severityRange')}</ThemedText>
-                                                <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'text')}}>{detectionResult.severity_range}</ThemedText>
-                                            </View>
-                                        )}
-
-                                        <View style={{marginBottom: getSpacing('md')}}>
-                                            <ThemedText style={{...getTextStyle(colorScheme, 'caption'), color: getColor(colorScheme, 'textSecondary'), marginBottom: getSpacing('xs')}}>{t('home.description')}</ThemedText>
-                                            <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'text'), lineHeight: 22}}>{i18n.language === 'ur' ? detectionResult.description_ur : detectionResult.description}</ThemedText>
-                                        </View>
-
-                                        {!detectionResult.is_healthy && (
-                                            <View style={{padding: getSpacing('md'), borderRadius: 12, backgroundColor: getColor(colorScheme, 'highlight'), borderWidth: 1, borderColor: getColor(colorScheme, 'primary'), marginBottom: getSpacing('md')}}>
-                                                <ThemedText style={{...getTextStyle(colorScheme, 'caption'), color: getColor(colorScheme, 'primary'), marginBottom: getSpacing('xs'), fontWeight: '600'}}>{t('home.recommendedAction')}</ThemedText>
-                                                <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'primary'), lineHeight: 22}}>{i18n.language === 'ur' ? detectionResult.recommended_action_ur : detectionResult.recommended_action}</ThemedText>
-                                            </View>
-                                        )}
-
-                                        <View style={{marginBottom: getSpacing('md')}}>
-                                            <ThemedText style={{...getTextStyle(colorScheme, 'heading'), color: getColor(colorScheme, 'text'), marginBottom: getSpacing('sm')}}>{t('home.topPredictions')}</ThemedText>
-                                            {detectionResult.top_3_predictions.map((pred, index) => (
-                                                <View key={index} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: getSpacing('sm'), borderBottomWidth: index < 2 ? 1 : 0, borderBottomColor: getColor(colorScheme, 'outline')}}>
-                                                    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-                                                        <View style={{width: 24, height: 24, borderRadius: 12, backgroundColor: index === 0 ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'outline'), alignItems: 'center', justifyContent: 'center', marginRight: getSpacing('sm')}}>
-                                                            <ThemedText style={{fontSize: 12, fontWeight: '600', color: getColor(colorScheme, 'buttonText')}}>{index + 1}</ThemedText>
-                                                        </View>
-                                                        <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'text'), flex: 1}}>{pred.class_name.replace(/_/g, ' ')}</ThemedText>
-                                                    </View>
-                                                    <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '600', color: getColor(colorScheme, 'primary')}}>{pred.confidence.toFixed(2)}%</ThemedText>
-                                                </View>
-                                            ))}
-                                        </View>
-
-                                        <TouchableOpacity style={{backgroundColor: getColor(colorScheme, 'primary'), padding: getSpacing('md'), borderRadius: 12, alignItems: 'center'}} onPress={() => {setShowResultModal(false); setSelectedImage(null);}}>
-                                            <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '600', color: getColor(colorScheme, 'buttonText')}}>{t('home.close')}</ThemedText>
-                                        </TouchableOpacity>
-                                    </View>
-                                )}
-                            </View>
-                        </ScrollView>
-                    </View>
-                </Modal>
             </ScrollView>
         </View>
     );
@@ -471,23 +394,6 @@ const styles = StyleSheet.create({
     loadingSubtext: {
         fontSize: 14,
         textAlign: 'center' as const,
-    },
-    resultModal: {
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '90%' as any,
-    },
-    resultModalHeader: {
-        flexDirection: 'row' as const,
-        justifyContent: 'space-between' as const,
-        alignItems: 'center' as const,
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(0,0,0,0.1)',
-    },
-    resultModalTitle: {
-        fontSize: 20,
-        fontWeight: '700' as const,
     },
 });
 

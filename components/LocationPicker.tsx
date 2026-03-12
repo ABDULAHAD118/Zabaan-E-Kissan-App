@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
     View,
     TextInput,
@@ -48,7 +48,8 @@ export default function LocationPicker({
                                            initialLocation,
                                        }: LocationPickerProps) {
     const colorScheme = useColorScheme() ?? 'light';
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isUrdu = i18n.language === 'ur';
     const mapRef = useRef<MapView>(null);
 
     const [mapType, setMapType] = useState<
@@ -79,7 +80,7 @@ export default function LocationPicker({
 
     // ------------------- LOCATION -------------------
 
-    const requestLocationPermission = async () => {
+    const requestLocationPermission = useCallback(async () => {
         try {
             const { status } =
                 await Location.requestForegroundPermissionsAsync();
@@ -101,20 +102,25 @@ export default function LocationPicker({
             const { latitude, longitude } = location.coords;
 
             setSelectedLocation({ latitude, longitude, address: undefined });
-            setRegion({ ...region, latitude, longitude });
+            setRegion((prev) => ({ ...prev, latitude, longitude }));
 
             mapRef.current?.animateToRegion(
-                { ...region, latitude, longitude },
+                {
+                    latitude,
+                    longitude,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                },
                 1000
             );
         } catch  {
             Alert.alert(t('common.error'), t('location.couldNotGetLocation'));
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         if (Platform.OS !== 'web') requestLocationPermission();
-    }, []);
+    }, [requestLocationPermission]);
 
     // ------------------- SEARCH -------------------
 
@@ -238,6 +244,8 @@ export default function LocationPicker({
                                 ...getInputStyle(colorScheme),
                                 backgroundColor: '#fff',
                                 borderRadius: 12,
+                                textAlign: isUrdu ? 'right' : 'left',
+                                writingDirection: isUrdu ? 'rtl' : 'ltr',
                             }}
                             placeholder={t('location.searchCity')}
                             value={searchQuery}

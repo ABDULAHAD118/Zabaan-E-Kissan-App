@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
     KeyboardAvoidingView,
     Platform,
@@ -17,6 +17,7 @@ import LocationPicker from "@/components/LocationPicker";
 import VoiceInput from "@/components/VoiceInput";
 import {useTranslation} from "react-i18next";
 import {generateUUID} from "@/utils/uuid";
+import {useLocalSearchParams} from 'expo-router';
 import {
     getColor,
     getContainerStyle,
@@ -40,6 +41,8 @@ export default function ChatScreen() {
     const colorScheme = useColorScheme() ?? "light";
     const {t} = useTranslation();
     const {language} = useLanguage();
+    const params = useLocalSearchParams<{ scanPrompt?: string; scanNonce?: string }>();
+    const lastConsumedScanNonceRef = useRef<string | null>(null);
 
     const [threadId] = useState(() => {
         return generateUUID();
@@ -64,6 +67,8 @@ export default function ChatScreen() {
     const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
     const [preparingMessageId, setPreparingMessageId] = useState<string | null>(null);
     const [dotCount, setDotCount] = useState(1);
+    const apiLanguage: 'english' | 'urdu' = language === 'ur' ? 'urdu' : 'english';
+    const isUrdu = language === 'ur';
 
     useEffect(() => {
         if (!isProcessing) return;
@@ -80,17 +85,17 @@ export default function ChatScreen() {
         }
     }, [messages]);
 
-    const handleSend = async (useStreaming: boolean = true) => {
-        if (!inputText.trim()) return;
+    const sendMessage = useCallback(async (rawText: string, useStreaming: boolean = true) => {
+        if (!rawText.trim()) return;
 
-        let queryText = inputText.trim();
+        let queryText = rawText.trim();
         if (locationEnabled && latitude !== null && longitude !== null) {
             queryText = `${queryText} ${latitude} ${longitude}`;
         }
 
         const userMessage: Message = {
             id: Date.now().toString(),
-            text: inputText.trim(),
+            text: rawText.trim(),
             isUser: true,
             timestamp: new Date(),
         };
@@ -169,6 +174,10 @@ export default function ChatScreen() {
             );
             setIsProcessing(false);
         }
+    }, [apiLanguage, latitude, locationEnabled, longitude, threadId]);
+
+    const handleSend = async (useStreaming: boolean = true) => {
+        await sendMessage(inputText, useStreaming);
     };
 
     const stripMarkdown = (markdown: string): string => {
@@ -264,7 +273,27 @@ export default function ChatScreen() {
         });
     };
 
-    const apiLanguage: 'english' | 'urdu' = language === 'ur' ? 'urdu' : 'english';
+
+    useEffect(() => {
+        const encodedPrompt = typeof params.scanPrompt === 'string' ? params.scanPrompt : '';
+        const incomingNonce = typeof params.scanNonce === 'string' ? params.scanNonce : '';
+
+        if (!encodedPrompt || !incomingNonce) return;
+        if (lastConsumedScanNonceRef.current === incomingNonce) return;
+        if (isProcessing) return;
+
+        // Backward compatible: old builds may pass encoded prompt, new builds pass plain text.
+        let normalizedPrompt: string;
+        try {
+            normalizedPrompt = decodeURIComponent(encodedPrompt);
+        } catch {
+            normalizedPrompt = encodedPrompt;
+        }
+
+        if (!normalizedPrompt.trim()) return;
+        lastConsumedScanNonceRef.current = incomingNonce;
+        void sendMessage(normalizedPrompt, true);
+    }, [params.scanPrompt, params.scanNonce, isProcessing, sendMessage]);
 
     const markdownStyles = {
         body: {
@@ -273,9 +302,45 @@ export default function ChatScreen() {
             fontWeight: '400',
             lineHeight: 22,
         },
+        heading1: {
+            color: getColor(colorScheme, 'primary'),
+            fontSize: 24,
+            fontWeight: '700',
+            marginTop: 8,
+            marginBottom: 10,
+        },
+        heading2: {
+            color: getColor(colorScheme, 'primary'),
+            fontSize: 20,
+            fontWeight: '700',
+            marginTop: 8,
+            marginBottom: 8,
+        },
+        heading3: {
+            color: getColor(colorScheme, 'primary'),
+            fontSize: 18,
+            fontWeight: '700',
+            marginTop: 6,
+            marginBottom: 6,
+        },
+        heading4: {
+            color: getColor(colorScheme, 'primary'),
+            fontSize: 16,
+            fontWeight: '700',
+            marginTop: 6,
+            marginBottom: 6,
+        },
         paragraph: {
             marginTop: 0,
             marginBottom: 8,
+        },
+        strong: {
+            color: getColor(colorScheme, 'primary'),
+            fontWeight: '700',
+        },
+        em: {
+            color: getColor(colorScheme, 'primary'),
+            fontStyle: 'italic',
         },
         bullet_list: {
             marginTop: 0,
@@ -443,7 +508,7 @@ export default function ChatScreen() {
                                     message.id === messages[messages.length - 1].id && (
                                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
                                             <ThemedText style={{fontWeight: '600', color: getColor(colorScheme, 'primary')}}>
-                                                Thinking
+                                                {t('chat.thinking')}
                                             </ThemedText>
                                             <ThemedText
                                                 style={{
@@ -526,7 +591,9 @@ export default function ChatScreen() {
                             marginRight: getSpacing('sm'),
                             borderRadius: 10,
                             paddingHorizontal: 15,
-                            color: getColor(colorScheme, 'text')
+                            color: getColor(colorScheme, 'text'),
+                            textAlign: isUrdu ? 'right' : 'left',
+                            writingDirection: isUrdu ? 'rtl' : 'ltr'
                         }}
                         placeholder={t('chat.inputPlaceholder')}
                         placeholderTextColor={getColor(colorScheme, 'textTertiary')}
@@ -534,7 +601,7 @@ export default function ChatScreen() {
                         onChangeText={setInputText}
                         multiline
                         numberOfLines={4}
-                        autoFocus={true}
+                        autoFocus={false}
                         autoCorrect={false}
                         autoCapitalize="sentences"
                         maxLength={500}
@@ -560,7 +627,8 @@ export default function ChatScreen() {
                             width: 40,
                             height: 40,
                             borderRadius: 20,
-                            backgroundColor: getColor(colorScheme, 'primary')
+                            backgroundColor: getColor(colorScheme, 'primary'),
+                            opacity: isProcessing || !inputText.trim() ? 0.5 : 1,
                         }}
                         onPress={() => handleSend(true)}
                         disabled={!inputText.trim() || isProcessing}

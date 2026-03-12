@@ -5,7 +5,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { getUrduCropName, getUrduCityName, getDisplayPrice } from "@/utils/helper";
+import { getCropName, getCityName, getDisplayPrice } from "@/utils/helper";
 import {
   getContainerStyle,
   getHeaderStyle,
@@ -22,14 +22,15 @@ import { CropPrice } from "@/hooks/useApi";
 export default function CropDetailScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const params = useLocalSearchParams();
+  const appLanguage = i18n.language === 'ur' ? 'ur' : 'en';
   
   // Parse crop data from URL params
   const cropData: CropPrice = JSON.parse(decodeURIComponent(params.crop as string));
 
   // Get price display using helper (matches prices page - shows per kg for 100KG crops)
-  const priceData = getDisplayPrice(cropData);
+  const priceData = getDisplayPrice(cropData, appLanguage);
   const minDisplay = (cropData.min_price === '-' || Number.isNaN(Number(priceData.min))) ? t('cropDetail.notAvailable') : `Rs. ${priceData.min}`;
   const maxDisplay = (cropData.max_price === '-' || Number.isNaN(Number(priceData.max))) ? t('cropDetail.notAvailable') : `Rs. ${priceData.max}`;
   const mainPriceDisplay = (minDisplay === t('cropDetail.notAvailable') && maxDisplay === t('cropDetail.notAvailable'))
@@ -40,7 +41,7 @@ export default function CropDetailScreen() {
 
   const handleShare = async () => {
     try {
-      const shareMessage = `${getUrduCropName(cropData.crop)} - ${getUrduCityName(cropData.city)}\n${t('cropDetail.pricePerUnit')}: ${mainPriceDisplay}\n${t('cropDetail.date')}: ${cropData.date}`;
+      const shareMessage = `${getCropName(cropData.crop, appLanguage)} - ${getCityName(cropData.city, appLanguage)}\n${t('cropDetail.pricePerUnit')}: ${mainPriceDisplay}\n${t('cropDetail.date')}: ${cropData.date}`;
       const result = await Share.share({
         message: shareMessage,
         title: t('cropDetail.title') + ' - Zabaan-e-Kisaan',
@@ -123,7 +124,7 @@ export default function CropDetailScreen() {
                 ...getTextStyle(colorScheme, 'title'),
                 color: getColor(colorScheme, 'text')
               }}>
-                {getUrduCropName(cropData.crop)}
+                {getCropName(cropData.crop, appLanguage)}
               </ThemedText>
               <View style={{
                 flexDirection: 'row',
@@ -136,7 +137,7 @@ export default function CropDetailScreen() {
                   fontSize: 16,
                   color: getColor(colorScheme, 'outline')
                 }}>
-                  {getUrduCityName(cropData.city)}
+                  {getCityName(cropData.city, appLanguage)}
                 </ThemedText>
               </View>
             </View>
