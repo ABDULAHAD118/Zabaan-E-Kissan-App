@@ -28,6 +28,7 @@ export type Crop = {
 // Chat API Types
 export type ChatMessage = {
     query: string;
+    language?: 'english' | 'urdu';
 };
 
 export type ChatResponse = {
@@ -169,9 +170,14 @@ export const fetchPrices = async (filters?: {
     }
 };
 
-export const sendChatMessage = async (message: string, threadId: string = 'default-thread'): Promise<ChatResponse> => {
+export const sendChatMessage = async (
+    message: string,
+    threadId: string = 'default-thread',
+    language: 'english' | 'urdu' = 'english'
+): Promise<ChatResponse> => {
     const response = await axios.post(`${API_ENDPOINTS.CHAT}/${threadId}`, {
-        query: message
+        query: message,
+        language,
     }, {
         headers: {
             'accept': 'application/json',
@@ -186,6 +192,7 @@ export const sendChatMessage = async (message: string, threadId: string = 'defau
 export const sendChatMessageSocket = (
     message: string,
     threadId: string = "default-thread",
+    language: 'english' | 'urdu' = 'english',
     onChunk: (chunk: string, fullText: string) => void,
     onComplete?: (fullText: string) => void,
     onError?: (error: Error) => void
@@ -196,7 +203,7 @@ export const sendChatMessageSocket = (
         let fullText = "";
         ws.onopen = () => {
             console.log("✅ WebSocket connected");
-            ws.send(JSON.stringify({query: message}));
+            ws.send(JSON.stringify({query: message, language}));
         };
 
         ws.onmessage = (event) => {

@@ -25,6 +25,8 @@ import {
     getSpacing,
     getTextStyle
 } from "@/utils/styles";
+import {useLanguage} from "@/providers/LanguageProvider";
+import Markdown from "react-native-markdown-display";
 
 
 interface Message {
@@ -37,6 +39,7 @@ interface Message {
 export default function ChatScreen() {
     const colorScheme = useColorScheme() ?? "light";
     const {t} = useTranslation();
+    const {language} = useLanguage();
 
     const [threadId] = useState(() => {
         return generateUUID();
@@ -108,6 +111,7 @@ export default function ChatScreen() {
                 sendChatMessageSocket(
                     queryText,
                     threadId,
+                    apiLanguage,
                     (_, fullText) => {
                         setMessages((prev) =>
                             prev.map((msg) =>
@@ -140,7 +144,7 @@ export default function ChatScreen() {
                     }
                 );
             } else {
-                const response = await sendChatMessage(queryText, threadId);
+                const response = await sendChatMessage(queryText, threadId, apiLanguage);
                 setMessages((prev) =>
                     prev.map((msg) =>
                         msg.id === aiMessageId
@@ -167,6 +171,43 @@ export default function ChatScreen() {
         }
     };
 
+    const stripMarkdown = (markdown: string): string => {
+        let text = markdown;
+
+        // Remove markdown headers (# ## ### etc.)
+        text = text.replace(/^#+\s+/gm, '');
+
+        // Remove bold markers (**)
+        text = text.replace(/\*\*(.*?)\*\*/g, '$1');
+        text = text.replace(/__([^_]*?)__/g, '$1');
+
+        // Remove italic markers (* or _)
+        text = text.replace(/\*([^*]*?)\*/g, '$1');
+        text = text.replace(/_([^_]*?)_/g, '$1');
+
+        // Remove backticks for code
+        text = text.replace(/`([^`]*?)`/g, '$1');
+
+        // Remove code blocks
+        text = text.replace(/```[\s\S]*?```/g, '');
+
+        // Remove links [text](url) -> keep text
+        text = text.replace(/\[(.*?)\]\((.*?)\)/g, '$1');
+
+        // Remove bullet points and numbered lists
+        text = text.replace(/^[\s]*[-*+]\s+/gm, '');
+        text = text.replace(/^[\s]*\d+\.\s+/gm, '');
+
+        // Remove horizontal rules
+        text = text.replace(/^[\s]*([-*_]){3,}[\s]*$/gm, '');
+
+        // Remove extra whitespace
+        text = text.replace(/\n\n+/g, '\n');
+        text = text.trim();
+
+        return text;
+    };
+
     const speakText = async (text: string, messageId: string) => {
         try {
             if (speakingMessageId === messageId) {
@@ -182,9 +223,12 @@ export default function ChatScreen() {
             setPreparingMessageId(messageId);
             await Speech.stop();
 
-            const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+            // Strip markdown formatting before speaking
+            const cleanText = stripMarkdown(text);
 
-            Speech.speak(text, {
+            const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(cleanText);
+
+            Speech.speak(cleanText, {
                 voice: 'ur-In-language',
                 language: hasUrdu ? 'ur-PK' : 'en-US',
                 pitch: 1,
@@ -219,6 +263,42 @@ export default function ChatScreen() {
             minute: '2-digit'
         });
     };
+
+    const apiLanguage: 'english' | 'urdu' = language === 'ur' ? 'urdu' : 'english';
+
+    const markdownStyles = {
+        body: {
+            color: getColor(colorScheme, 'primary'),
+            fontSize: 16,
+            fontWeight: '400',
+            lineHeight: 22,
+        },
+        paragraph: {
+            marginTop: 0,
+            marginBottom: 8,
+        },
+        bullet_list: {
+            marginTop: 0,
+            marginBottom: 8,
+        },
+        ordered_list: {
+            marginTop: 0,
+            marginBottom: 8,
+        },
+        code_inline: {
+            backgroundColor: getColor(colorScheme, 'surface'),
+            color: getColor(colorScheme, 'primary'),
+            borderRadius: 4,
+            paddingHorizontal: 4,
+            paddingVertical: 2,
+        },
+        code_block: {
+            backgroundColor: getColor(colorScheme, 'surface'),
+            color: getColor(colorScheme, 'primary'),
+            borderRadius: 8,
+            padding: 10,
+        },
+    } as const;
 
 
     return (
@@ -328,7 +408,7 @@ export default function ChatScreen() {
                         {/* Bubble */}
                         <View
                             style={{
-                                maxWidth: '75%',
+                                maxWidth: '90%',
                                 minWidth: '30%',
                                 backgroundColor: message.isUser
                                     ? getColor(colorScheme, 'primary')
@@ -355,26 +435,28 @@ export default function ChatScreen() {
                                     {message.text}
                                 </ThemedText>
                             ) : (
-                                <ThemedText
-                                    style={{
-                                        ...getTextStyle(colorScheme, 'body'),
-                                        color: getColor(colorScheme, 'primary'),
-                                        lineHeight: 22,
-                                    }}
-                                >
-                                    {message.text
-                                        ? message.text
-                                        : isProcessing &&
-                                        message.id === messages[messages.length - 1].id && (
-                                            <>
-                                                <ThemedText style={{fontWeight: '600'}}>Thinking </ThemedText>
-                                                <ThemedText
-                                                    style={{fontSize: 18, fontWeight: 'bold', letterSpacing: 2}}>
-                                                    {"•".repeat(dotCount)}
-                                                </ThemedText>
-                                            </>
-                                        )}
-                                </ThemedText>
+                                message.text
+                                    ? (
+                                        <Markdown style={markdownStyles}>{message.text}</Markdown>
+                                    )
+                                    : isProcessing &&
+                                    message.id === messages[messages.length - 1].id && (
+                                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                            <ThemedText style={{fontWeight: '600', color: getColor(colorScheme, 'primary')}}>
+                                                Thinking
+                                            </ThemedText>
+                                            <ThemedText
+                                                style={{
+                                                    fontSize: 18,
+                                                    fontWeight: 'bold',
+                                                    letterSpacing: 2,
+                                                    color: getColor(colorScheme, 'primary')
+                                                }}
+                                            >
+                                                {` ${"•".repeat(dotCount)}`}
+                                            </ThemedText>
+                                        </View>
+                                    )
                             )}
 
                             {/* Time + Volume Icon */}
@@ -440,13 +522,14 @@ export default function ChatScreen() {
                         style={{
                             flex: 1,
                             alignItems: 'center',
-                            backgroundColor: getColor(colorScheme, 'highlight'),
+                            backgroundColor: getColor(colorScheme, 'input'),
                             marginRight: getSpacing('sm'),
                             borderRadius: 10,
-                            paddingHorizontal: 15
+                            paddingHorizontal: 15,
+                            color: getColor(colorScheme, 'text')
                         }}
                         placeholder={t('chat.inputPlaceholder')}
-                        placeholderTextColor={getColor(colorScheme, 'outline')}
+                        placeholderTextColor={getColor(colorScheme, 'textTertiary')}
                         value={inputText}
                         onChangeText={setInputText}
                         multiline

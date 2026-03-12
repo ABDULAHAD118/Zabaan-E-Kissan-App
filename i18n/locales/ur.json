@@ -29,7 +29,10 @@
     "couldNotGetLocation": "موجودہ مقام حاصل نہیں کیا جا سکا",
     "failedToSearchLocation": "مقام تلاش کرنے میں ناکام۔",
     "cancel": "منسوخ کریں",
-    "openSettings": "ترتیبات کھولیں"
+    "openSettings": "ترتیبات کھولیں",
+    "selectLocation": "مقام منتخب کریں",
+    "searchCity": "شہر تلاش کریں...",
+    "confirmLocation": "مقام کی تصدیق کریں"
   },
   "languageModal": {
     "title": "اپنی زبان منتخب کریں",
@@ -109,7 +112,8 @@
     "failedToStartRecording": "ریکارڈنگ شروع کرنے میں ناکام۔",
     "failedToStopRecording": "ریکارڈنگ روکنے میں ناکام۔",
     "voiceTranscriptionFailed": "صوتی ٹرانسکریپشن ناکام",
-    "stopRecording": "ریکارڈنگ روکیں"
+    "stopRecording": "ریکارڈنگ روکیں",
+    "thinking": "سوچ رہا ہے"
   },
   "prices": {
     "title": "مارکیٹ کی قیمتیں",

@@ -195,7 +195,6 @@ export default function LocationPicker({
             <View
                 style={{
                     flex: 1,
-                    backgroundColor: getColor(colorScheme, 'background'),
                 }}
             >
                 {/* Header */}
@@ -228,7 +227,7 @@ export default function LocationPicker({
                                 marginLeft: 10,
                             }}
                         >
-                            Select Location
+                            {t('location.selectLocation')}
                         </ThemedText>
                     </View>
 
@@ -240,7 +239,7 @@ export default function LocationPicker({
                                 backgroundColor: '#fff',
                                 borderRadius: 12,
                             }}
-                            placeholder="Search city..."
+                            placeholder={t('location.searchCity')}
                             value={searchQuery}
                             onChangeText={handleSearchChange}
                         />
@@ -319,13 +318,13 @@ export default function LocationPicker({
                 </View>
 
                 {/* Bottom */}
-                <View style={{ padding: 20 }}>
+                <View style={{ padding: 20, backgroundColor:getColor(colorScheme,'surface') }}>
                     <TouchableOpacity
                         style={getButtonStyle(colorScheme, 'primary')}
                         onPress={handleConfirm}
                     >
-                        <ThemedText style={{ color: '#fff' }}>
-                            Confirm Location
+                        <ThemedText style={{ color: getColor(colorScheme,'buttonText') }}>
+                            {t('location.confirmLocation')}
                         </ThemedText>
                     </TouchableOpacity>
                 </View>
@@ -345,7 +344,7 @@ export default function LocationPicker({
                     >
                         <View
                             style={{
-                                backgroundColor: '#fff',
+                                backgroundColor: getColor(colorScheme, 'surface'),
                                 borderRadius: 20,
                                 padding: 20,
                             }}
@@ -365,6 +364,7 @@ export default function LocationPicker({
                                                 fontSize: 16,
                                                 fontWeight:
                                                     mapType === type ? '600' : '400',
+                                                color:getColor(colorScheme,'primary')
                                             }}
                                         >
                                             {type.toUpperCase()}

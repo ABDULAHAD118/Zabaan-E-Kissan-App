@@ -1,7 +1,4 @@
 import { Colors, ColorScheme } from '@/constants/Colors';
-
-export type StyleFunction = (colorScheme: ColorScheme) => any;
-
 // Color utilities
 export const getColor = (colorScheme: ColorScheme, colorKey: keyof typeof Colors.light) => {
   return Colors[colorScheme][colorKey];

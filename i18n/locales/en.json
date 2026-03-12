@@ -29,7 +29,10 @@
     "couldNotGetLocation": "Could not get current location",
     "failedToSearchLocation": "Failed to search location.",
     "cancel": "Cancel",
-    "openSettings": "Open Settings"
+    "openSettings": "Open Settings",
+    "selectLocation": "Select Location",
+    "searchCity": "Search city...",
+    "confirmLocation": "Confirm Location"
   },
   "languageModal": {
     "title": "Choose Your Language",
@@ -109,7 +112,8 @@
     "failedToStartRecording": "Failed to start recording.",
     "failedToStopRecording": "Failed to stop recording.",
     "voiceTranscriptionFailed": "Voice transcription failed",
-    "stopRecording": "Stop Recording"
+    "stopRecording": "Stop Recording",
+    "thinking": "Thinking"
   },
   "prices": {
     "title": "Market Prices",
