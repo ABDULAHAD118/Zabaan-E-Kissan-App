@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '@/i18n/config';
 
 export const LANGUAGE_KEY = '@app_language';
+const LANGUAGE_ONBOARDING_DONE_KEY = '@app_language_onboarding_done';
 let storageAvailable = true;
 
 interface LanguageContextType {
@@ -28,15 +29,20 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     try {
       if (storageAvailable) {
         try {
-            const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
+            const [savedLanguage, onboardingDone] = await Promise.all([
+              AsyncStorage.getItem(LANGUAGE_KEY),
+              AsyncStorage.getItem(LANGUAGE_ONBOARDING_DONE_KEY),
+            ]);
+
             if (savedLanguage) {
-                setLanguageState(savedLanguage);
-                i18n.changeLanguage(savedLanguage);
-                setShowLanguageModal(false);
-                return
-            } else {
-                setShowLanguageModal(true);
+              setLanguageState(savedLanguage);
+              i18n.changeLanguage(savedLanguage);
+              setShowLanguageModal(false);
+              return;
             }
+
+            setShowLanguageModal(onboardingDone !== 'true');
+            return;
         } catch (storageError: any) {
           // Handle native module not available error gracefully
           if (storageError.message?.includes('Native module is null')) {
@@ -60,7 +66,10 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     try {
       if (storageAvailable) {
         try {
-          await AsyncStorage.setItem(LANGUAGE_KEY, lang);
+          await Promise.all([
+            AsyncStorage.setItem(LANGUAGE_KEY, lang),
+            AsyncStorage.setItem(LANGUAGE_ONBOARDING_DONE_KEY, 'true'),
+          ]);
         } catch (storageError: any) {
           if (storageError.message?.includes('Native module is null')) {
             console.warn('AsyncStorage native module not initialized, language not persisted');

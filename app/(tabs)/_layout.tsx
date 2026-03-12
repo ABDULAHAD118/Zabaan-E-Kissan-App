@@ -5,7 +5,6 @@ import {Colors} from "@/constants/Colors";
 import {useColorScheme} from "@/hooks/useColorScheme";
 import {Ionicons} from "@expo/vector-icons";
 import {useTranslation} from "react-i18next";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
@@ -25,7 +24,6 @@ export default function TabLayout() {
                         },
                         {
                             text: t('common.yes'), onPress: async () => {
-                                await AsyncStorage.clear();
                                 BackHandler.exitApp()
                             }
                         },
