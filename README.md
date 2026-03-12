@@ -1,4 +1,4 @@
-# Zabaan-E-Kisaan - Smart Farming App
+# Zabaan-E-Kissan - Smart Farming App
 
 A comprehensive React Native farming application with disease detection, AI chat assistance, and real-time crop price monitoring.
 
@@ -64,7 +64,7 @@ A comprehensive React Native farming application with disease detection, AI chat
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd Zabaan-E-Kisaan
+cd Zabaan-E-Kissan
 
 # Install dependencies
 npm install

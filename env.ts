@@ -4,7 +4,7 @@ export const ENV = {
     // SOCKET_URL:'ws://192.168.1.11:8000',
     API_BASE_URL: 'https://api.zabaan-e-kissan.me',
     SOCKET_URL: 'wss://api.zabaan-e-kissan.me',
-    APP_NAME: 'Zabaan-E-Kisaan',
+    APP_NAME: 'Zabaan-E-Kissan',
     APP_VERSION: '1.0.0',
 } as const;
 

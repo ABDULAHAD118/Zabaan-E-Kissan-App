@@ -44,7 +44,7 @@ export default function CropDetailScreen() {
       const shareMessage = `${getCropName(cropData.crop, appLanguage)} - ${getCityName(cropData.city, appLanguage)}\n${t('cropDetail.pricePerUnit')}: ${mainPriceDisplay}\n${t('cropDetail.date')}: ${cropData.date}`;
       const result = await Share.share({
         message: shareMessage,
-        title: t('cropDetail.title') + ' - Zabaan-e-Kisaan',
+        title: t('cropDetail.title') + ' - Zabaan-e-Kissan',
       });
       if (result.action === Share.sharedAction) {
         // Shared successfully

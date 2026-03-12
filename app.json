@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Zabaan E Kisaan",
-    "slug": "zabaan-e-kisaan",
+    "name": "Zabaan E Kissan",
+    "slug": "zabaan-e-kissan",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,7 +10,6 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.abdulahad0118.zabaanekisaan",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby agricultural services.",
@@ -26,16 +25,22 @@
         "backgroundColor": "#4CAF50"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.abdulahad0118.zabaanekisaan",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyCQGJsBgJBOPHiiSV8xBVpESPm1RHyd7dM"
         }
-      }
+      },
+      "package": "com.abdulahad0118.zabaanekissan"
     },
     "web": {
       "bundler": "metro",
@@ -72,8 +77,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "83838cc1-9992-4053-b72b-a4353b7170a8"
+        "projectId": "b0d563bf-37ad-4344-89b2-e7cd867b0777"
       }
-    }
+    },
+    "owner": "abdulahad0118"
   }
 }

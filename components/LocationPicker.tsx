@@ -138,7 +138,7 @@ export default function LocationPicker({
             )}&limit=10`;
 
             const response = await fetch(url, {
-                headers: { 'User-Agent': 'Zabaan-E-Kisaan-App' },
+                headers: { 'User-Agent': 'Zabaan-E-Kissan-App' },
             });
 
             const data: GeocodeResult[] = await response.json();
