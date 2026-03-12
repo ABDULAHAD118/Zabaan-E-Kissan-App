@@ -1,5 +1,5 @@
 /**
- * Modern Colors for Zabaan-e-Kisaan app - a farming app with disease detection, chat, and crop price features.
+ * Modern Colors for Zabaan-e-Kissan app - a farming app with disease detection, chat, and crop price features.
  * Supporting both light and dark themes with beautiful, accessible colors.
  */
 

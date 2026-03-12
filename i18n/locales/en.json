@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Zabaan-E-Kisaan",
+    "appName": "Zabaan-E-Kissan",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
@@ -143,11 +143,11 @@
     "cacheClearFailed": "Failed to clear cache",
     "others": "Others",
     "shareApp": "Share App",
-    "shareAppSubtitle": "Tell friends about Zabaan-e-Kisaan",
-    "shareMessage": "Share Zabaan-e-Kisaan with your friends and help them improve their farming!",
+    "shareAppSubtitle": "Tell friends about Zabaan-e-Kissan",
+    "shareMessage": "Share Zabaan-e-Kissan with your friends and help them improve their farming!",
     "rateApp": "Rate App",
     "rateAppSubtitle": "Share your experience",
-    "rateMessage": "Thank you for using Zabaan-e-Kisaan! Please rate us on the app store.",
+    "rateMessage": "Thank you for using Zabaan-e-Kissan! Please rate us on the app store.",
     "about": "About",
     "aboutDescription": "A comprehensive farming app with AI-powered disease detection, intelligent chat assistance, and real-time crop price monitoring. Built for the farming community with love and care.",
     "help": "Help & Support",
