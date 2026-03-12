@@ -49,7 +49,7 @@ export type ChatHistory = {
 
 export type TranscribeAudioPayload = {
     uri: string;
-    language: 'english' | 'urdu';
+    language: 'en' | 'ur';
 };
 
 export type TranscribeAudioResponse = {
