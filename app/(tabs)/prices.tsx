@@ -370,8 +370,10 @@ export default function PricesScreen() {
                                 }}
                                 onPress={() => setSelectedCity("")}
                             >
-                                <ThemedText style={{color: getColor(colorScheme, 'text')}}>{t('prices.location')}</ThemedText>
-                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')} style={{marginLeft: 6}} />
+                                <ThemedText
+                                    style={{color: getColor(colorScheme, 'text')}}>{t('prices.location')}</ThemedText>
+                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')}
+                                          style={{marginLeft: 6}}/>
                             </TouchableOpacity>
                         )}
 
@@ -391,8 +393,10 @@ export default function PricesScreen() {
                                 }}
                                 onPress={() => setSelectedCrop("")}
                             >
-                                <ThemedText style={{color: getColor(colorScheme, 'text')}}>{t('prices.cropType')}</ThemedText>
-                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')} style={{marginLeft: 6}} />
+                                <ThemedText
+                                    style={{color: getColor(colorScheme, 'text')}}>{t('prices.cropType')}</ThemedText>
+                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')}
+                                          style={{marginLeft: 6}}/>
                             </TouchableOpacity>
                         )}
 
@@ -414,8 +418,10 @@ export default function PricesScreen() {
                                     setSelectedDateRange("");
                                 }}
                             >
-                                <ThemedText style={{color: getColor(colorScheme, 'text')}}>{t('prices.date')}</ThemedText>
-                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')} style={{marginLeft: 6}} />
+                                <ThemedText
+                                    style={{color: getColor(colorScheme, 'text')}}>{t('prices.date')}</ThemedText>
+                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')}
+                                          style={{marginLeft: 6}}/>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -470,12 +476,12 @@ export default function PricesScreen() {
                                             setShowFilters(!showFilters)
                                         }}
                                     >
-                                    <ThemedText style={{
-                                        fontWeight: '600',
-                                        color: selectedCity === city._id ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
-                                    }}>
-                                        {getCityName(city.name, i18n.language)}
-                                    </ThemedText>
+                                        <ThemedText style={{
+                                            fontWeight: '600',
+                                            color: selectedCity === city._id ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
+                                        }}>
+                                            {getCityName(city.name, i18n.language)}
+                                        </ThemedText>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
@@ -561,7 +567,11 @@ export default function PricesScreen() {
             <FlatList
                 data={cropPrices}
                 keyExtractor={(item) => item._id}
-                contentContainerStyle={{paddingHorizontal: 16, paddingTop: getSpacing('md'), paddingBottom: getSpacing('md')}}
+                contentContainerStyle={{
+                    paddingHorizontal: 16,
+                    paddingTop: getSpacing('md'),
+                    paddingBottom: getSpacing('md')
+                }}
                 showsVerticalScrollIndicator={false}
                 onEndReached={handleEndReached}
                 onEndReachedThreshold={0.3}
@@ -587,17 +597,6 @@ export default function PricesScreen() {
                             }}>
                                 {selectedCity ? getCityName(cities.find(city => city._id === selectedCity)?.name || '', i18n.language) : t('prices.allCities')} {t('prices.cityMarket')}
                             </ThemedText>
-                            <View style={{
-                                paddingHorizontal: getSpacing('sm'),
-                                paddingVertical: getSpacing('xs'),
-                            }}>
-                                <ThemedText style={{
-                                    fontSize: 14,
-                                    color: getColor(colorScheme, 'text')
-                                }}>
-                                    {t('prices.lastUpdated')}: {new Date().toLocaleDateString()}
-                                </ThemedText>
-                            </View>
                         </View>
                     </View>
                 }
@@ -734,7 +733,11 @@ export default function PricesScreen() {
                                     }}>
                                         Rs. {priceData.min}
                                     </ThemedText>
-                                    <ThemedText style={{fontSize: 10, color: getColor(colorScheme, 'outline'), fontWeight: '600'}}>
+                                    <ThemedText style={{
+                                        fontSize: 10,
+                                        color: getColor(colorScheme, 'outline'),
+                                        fontWeight: '600'
+                                    }}>
                                         {priceData.unitLabel}
                                     </ThemedText>
                                 </View>
@@ -766,7 +769,11 @@ export default function PricesScreen() {
                                     }}>
                                         Rs. {priceData.max}
                                     </ThemedText>
-                                    <ThemedText style={{fontSize: 10, color: getColor(colorScheme, 'outline'), fontWeight: '600'}}>
+                                    <ThemedText style={{
+                                        fontSize: 10,
+                                        color: getColor(colorScheme, 'outline'),
+                                        fontWeight: '600'
+                                    }}>
                                         {priceData.unitLabel}
                                     </ThemedText>
                                 </View>
@@ -782,7 +789,11 @@ export default function PricesScreen() {
                                 borderTopColor: getColor(colorScheme, 'outline')
                             }}>
                                 <Ionicons name="information-circle" size={16} color={getColor(colorScheme, 'primary')}/>
-                                <ThemedText style={{marginLeft: getSpacing('sm'), fontSize: 14, color: getColor(colorScheme, 'primary')}}>
+                                <ThemedText style={{
+                                    marginLeft: getSpacing('sm'),
+                                    fontSize: 14,
+                                    color: getColor(colorScheme, 'primary')
+                                }}>
                                     {t('prices.tapForDetails')}
                                 </ThemedText>
                             </View>
@@ -791,8 +802,9 @@ export default function PricesScreen() {
                 }}
                 ListFooterComponent={
                     isFetchingNextPage ? (
-                        <View style={{alignItems: 'center', justifyContent: 'center', paddingVertical: getSpacing('lg')}}>
-                            <ActivityIndicator size="small" color={getColor(colorScheme, 'primary')} />
+                        <View
+                            style={{alignItems: 'center', justifyContent: 'center', paddingVertical: getSpacing('lg')}}>
+                            <ActivityIndicator size="small" color={getColor(colorScheme, 'primary')}/>
                         </View>
                     ) : null
                 }
