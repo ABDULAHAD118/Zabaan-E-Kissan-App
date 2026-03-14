@@ -287,7 +287,6 @@ export default function CropDetailScreen() {
           
             <ThemedText style={{
               fontSize: 14,
-              lineHeight: 20,
               color: getColor(colorScheme, 'outline'),
               textAlign: 'justify'
             }}>
@@ -332,7 +331,6 @@ export default function CropDetailScreen() {
           }}>
             <ThemedText style={{
               fontSize: 16,
-              lineHeight: 24,
               color: getColor(colorScheme, 'primary'),
               textAlign: 'justify'
             }}>

@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
+    AppState,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -28,6 +29,7 @@ import {
 } from "@/utils/styles";
 import {useLanguage} from "@/providers/LanguageProvider";
 import Markdown from "react-native-markdown-display";
+import {formatTime, getChatMarkdownStyles, sanitizeTextForSpeech} from "@/utils/helper";
 
 
 interface Message {
@@ -79,6 +81,24 @@ export default function ChatScreen() {
 
         return () => clearInterval(interval);
     }, [isProcessing]);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState !== 'active') {
+                void Speech.stop();
+                setSpeakingMessageId(null);
+                setPreparingMessageId(null);
+            }
+        });
+
+        return () => {
+            subscription.remove();
+            void Speech.stop();
+            setSpeakingMessageId(null);
+            setPreparingMessageId(null);
+        };
+    }, []);
+
     useEffect(() => {
         if (scrollViewRef.current) {
             scrollViewRef.current.scrollToEnd({animated: true});
@@ -180,43 +200,6 @@ export default function ChatScreen() {
         await sendMessage(inputText, useStreaming);
     };
 
-    const stripMarkdown = (markdown: string): string => {
-        let text = markdown;
-
-        // Remove markdown headers (# ## ### etc.)
-        text = text.replace(/^#+\s+/gm, '');
-
-        // Remove bold markers (**)
-        text = text.replace(/\*\*(.*?)\*\*/g, '$1');
-        text = text.replace(/__([^_]*?)__/g, '$1');
-
-        // Remove italic markers (* or _)
-        text = text.replace(/\*([^*]*?)\*/g, '$1');
-        text = text.replace(/_([^_]*?)_/g, '$1');
-
-        // Remove backticks for code
-        text = text.replace(/`([^`]*?)`/g, '$1');
-
-        // Remove code blocks
-        text = text.replace(/```[\s\S]*?```/g, '');
-
-        // Remove links [text](url) -> keep text
-        text = text.replace(/\[(.*?)\]\((.*?)\)/g, '$1');
-
-        // Remove bullet points and numbered lists
-        text = text.replace(/^[\s]*[-*+]\s+/gm, '');
-        text = text.replace(/^[\s]*\d+\.\s+/gm, '');
-
-        // Remove horizontal rules
-        text = text.replace(/^[\s]*([-*_]){3,}[\s]*$/gm, '');
-
-        // Remove extra whitespace
-        text = text.replace(/\n\n+/g, '\n');
-        text = text.trim();
-
-        return text;
-    };
-
     const speakText = async (text: string, messageId: string) => {
         try {
             if (speakingMessageId === messageId) {
@@ -232,8 +215,11 @@ export default function ChatScreen() {
             setPreparingMessageId(messageId);
             await Speech.stop();
 
-            // Strip markdown formatting before speaking
-            const cleanText = stripMarkdown(text);
+            const cleanText = sanitizeTextForSpeech(text);
+            if (!cleanText) {
+                setPreparingMessageId(null);
+                return;
+            }
 
             const hasUrdu = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(cleanText);
 
@@ -266,14 +252,6 @@ export default function ChatScreen() {
         }
     };
 
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-
     useEffect(() => {
         const encodedPrompt = typeof params.scanPrompt === 'string' ? params.scanPrompt : '';
         const incomingNonce = typeof params.scanNonce === 'string' ? params.scanNonce : '';
@@ -295,75 +273,7 @@ export default function ChatScreen() {
         void sendMessage(normalizedPrompt, true);
     }, [params.scanPrompt, params.scanNonce, isProcessing, sendMessage]);
 
-    const markdownStyles = {
-        body: {
-            color: getColor(colorScheme, 'primary'),
-            fontSize: 16,
-            fontWeight: '400',
-            lineHeight: 22,
-        },
-        heading1: {
-            color: getColor(colorScheme, 'primary'),
-            fontSize: 24,
-            fontWeight: '700',
-            marginTop: 8,
-            marginBottom: 10,
-        },
-        heading2: {
-            color: getColor(colorScheme, 'primary'),
-            fontSize: 20,
-            fontWeight: '700',
-            marginTop: 8,
-            marginBottom: 8,
-        },
-        heading3: {
-            color: getColor(colorScheme, 'primary'),
-            fontSize: 18,
-            fontWeight: '700',
-            marginTop: 6,
-            marginBottom: 6,
-        },
-        heading4: {
-            color: getColor(colorScheme, 'primary'),
-            fontSize: 16,
-            fontWeight: '700',
-            marginTop: 6,
-            marginBottom: 6,
-        },
-        paragraph: {
-            marginTop: 0,
-            marginBottom: 8,
-        },
-        strong: {
-            color: getColor(colorScheme, 'primary'),
-            fontWeight: '700',
-        },
-        em: {
-            color: getColor(colorScheme, 'primary'),
-            fontStyle: 'italic',
-        },
-        bullet_list: {
-            marginTop: 0,
-            marginBottom: 8,
-        },
-        ordered_list: {
-            marginTop: 0,
-            marginBottom: 8,
-        },
-        code_inline: {
-            backgroundColor: getColor(colorScheme, 'surface'),
-            color: getColor(colorScheme, 'primary'),
-            borderRadius: 4,
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-        },
-        code_block: {
-            backgroundColor: getColor(colorScheme, 'surface'),
-            color: getColor(colorScheme, 'primary'),
-            borderRadius: 8,
-            padding: 10,
-        },
-    } as const;
+    const markdownStyles = getChatMarkdownStyles(colorScheme);
 
 
     return (
@@ -494,7 +404,7 @@ export default function ChatScreen() {
                                     style={{
                                         ...getTextStyle(colorScheme, 'body'),
                                         color: getColor(colorScheme, 'buttonText'),
-                                        lineHeight: 22,
+
                                     }}
                                 >
                                     {message.text}

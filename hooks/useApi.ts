@@ -1,4 +1,4 @@
-import {useQuery, useQueryClient} from '@tanstack/react-query';
+import {useInfiniteQuery, useQuery, useQueryClient} from '@tanstack/react-query';
 import axios from 'axios';
 import {API_ENDPOINTS, ENV} from '@/env';
 
@@ -313,6 +313,33 @@ export const usePrices = (filters?: {
         staleTime: 1000 * 60 * 30, // 30 minutes
         gcTime: 1000 * 60 * 60, // 1 hour
         enabled: true,
+    });
+};
+
+export const useInfinitePrices = (filters?: {
+    city?: string;
+    crop?: string;
+    date?: string;
+    limit?: number;
+}) => {
+    const limit = filters?.limit ?? 20;
+
+    return useInfiniteQuery({
+        queryKey: ['prices-infinite', filters || {}],
+        queryFn: ({ pageParam }) => fetchPrices({
+            ...filters,
+            page: Number(pageParam) || 1,
+            limit,
+        }),
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) => {
+            if (!lastPage.pagination.has_next) {
+                return undefined;
+            }
+            return lastPage.pagination.page + 1;
+        },
+        staleTime: 1000 * 60 * 30,
+        gcTime: 1000 * 60 * 60,
     });
 };
 

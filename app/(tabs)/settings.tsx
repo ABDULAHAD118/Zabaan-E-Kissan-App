@@ -426,7 +426,6 @@ export default function SettingsScreen() {
             </View>
             <ThemedText style={{
               fontSize: 14,
-              lineHeight: 20,
               color: getColor(colorScheme, 'outline')
             }}>
               {t('settings.aboutDescription')}

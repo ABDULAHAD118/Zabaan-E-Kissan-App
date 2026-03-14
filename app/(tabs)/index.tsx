@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useCallback} from "react";
 import {
     ScrollView,
     TouchableOpacity,
@@ -17,6 +17,7 @@ import {Ionicons, Entypo, MaterialIcons} from "@expo/vector-icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from '@tanstack/react-query';
 import {useRouter} from 'expo-router';
+import {useFocusEffect} from '@react-navigation/native';
 import {
     getContainerStyle,
     getHeaderStyle,
@@ -40,14 +41,20 @@ export default function DiseaseDetectionScreen() {
     const [showActionSheet, setShowActionSheet] = useState(false);
     const [recentScans, setRecentScans] = useState<DiseaseScanResult[]>([]);
 
-    useEffect(() => {
-        loadRecentScans();
-    }, []);
-
-    const loadRecentScans = async () => {
+    const loadRecentScans = useCallback(async () => {
         const scans = await getRecentScans();
         setRecentScans(scans);
-    };
+    }, []);
+
+    useEffect(() => {
+        void loadRecentScans();
+    }, [loadRecentScans]);
+
+    useFocusEffect(
+        useCallback(() => {
+            void loadRecentScans();
+        }, [loadRecentScans])
+    );
 
     const detectMutation = useMutation({
         mutationFn: detectDisease,

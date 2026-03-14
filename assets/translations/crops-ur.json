@@ -1,135 +1,606 @@
 {
-  "Melon": "خربوزہ",
-  "Watermelon": "تربوز",
-  "Apple Kala Kullu (Madani)": "سیب کالا کلو مدنی",
-  "Mango (Malda)": "آم مالدہ",
-  "Lychee": "لیچی",
-  "Strawberry": "اسٹرابیری",
-  "Dates (Aseel)": "کھجور عسیل",
-  "Apple (Gatcha)": "سیب گاچا",
-  "Lemon (Other)": "لیموں دیگر",
-  "Lemon (Desi)": "دیسی لیموں",
-  "Lemon (China)": "چائنا لیموں",
-  "Moong": "مونگ",
-  "Peach": "آڑو",
-  "Peach Special": "آڑو اسپیشل",
-  "Plum": "آلو بخارا",
-  "Mango Saharni": "آم سہرنی",
-  "Mango Desi": "دیسی آم",
-  "Apricot Yellow": "زرد خوبانی",
-  "Apricot White": "سفید خوبانی",
-  "Pomegranate Desi": "دیسی انار",
-  "Grapes Gola": "انگور گولا",
-  "Grapes Sundekhani": "انگور سندیکھانی",
-  "Moong Pulse": "دال مونگ",
-  "Pear": "ناشپاتی",
-  "Sweet Musk Melon": "میٹھا خربوزہ",
-  "Sweet Musk Melon (Shireen)": "میٹھا خربوزہ شیرین",
-  "Jaman": "جامن",
-  "Persimmon(جاپانی پھل)": "جاپانی پھل",
-  "Sweet Potato(شکر قندی)": "شکر قندی",
-  "jujube(بیر)": "بیر",
-  "Cocunut": "ناریل",
-  "Papaya(پپیتا)": "پپیتا",
-  "sugarcane(گنڈ یری)": "گنا (گنڈیری)",
-  "Mash": "ماش",
-  "feutral early(100 Pcs) فروٹر": "فروٹر (100 عدد)",
-  "Loquat": "لوکاٹ",
-  "Dates(Irani)": "کھجور ایرانی",
-  "Mash Pulse(Imported) washed": "ماش دال درآمد شدہ",
-  "Masoor Whole(local)": "مسور ثابت (مقامی)",
-  "Masoor Pulse(local)": "مسور دال (مقامی)",
-  "Maize": "مکئی",
-  "Millet": "باجرا",
-  "Sorghum": "جواری",
-  "RapeSeed (Torya)": "توریا",
-  "Wheat": "گندم",
-  "Red Chilli Whole (Dry)": "لال مرچ ثابت خشک",
-  "Seed Cotton(Phutti)": "پھٹی",
-  "Banola": "بنولا",
-  "Banola Cake": "بنولا کھل",
-  "Green Fodder": "سبز چارہ",
-  "Wheat Straw": "گندم بھوسہ",
-  "Rice Basmati Super (Old)": "چاول باسمتی سپر پرانا",
-  "Rice Basmati (385)": "چاول باسمتی 385",
-  "Groundnut": "مونگ پھلی",
-  "Jaggery (گڑ)": "گڑ",
-  "Rice Basmati Super (New)": "چاول باسمتی سپر نیا",
-  "Mash Pulse(local)": "ماش دال (مقامی)",
-  "Gram White(Imported)": "سفید چنا درآمد شدہ",
-  "Masoor Whole (Imported)": "مسور ثابت درآمد شدہ",
-  "Masoor Pulse (Imported)": "مسور دال درآمد شدہ",
-  "Gram Flour (بیسن)": "بیسن",
-  "Paddy Kainat": "دھان کائنات",
-  "Rice Kainat (New)": "چاول کائنات نیا",
-  "Sunflower": "سورج مکھی",
-  "Canola": "کینولا",
-  "Sesame(تِل)": "تل",
-  "Rice (IRRI)": "چاول اری",
-  "Mustard seed": "سرسوں دانہ",
-  "Brown Sugar(شکر)": "شکر",
-  "Barley(جو)": "جو",
-  "Potato Fresh": "آلو تازہ",
-  "Potato Store": "آلو ذخیرہ",
-  "Onion": "پیاز",
-  "Garlic (China)": "چائنا لہسن",
-  "Ginger(China)": "چائنا ادرک",
-  "Tomato": "ٹماٹر",
-  "Spinach": "پالک",
-  "Paddy Basmati": "دھان باسمتی",
-  "Brinjal": "بینگن",
-  "Lady Finger/Okra (بھنڈی توری)": "بھنڈی",
-  "Bitter Gourd (کریلا)": "کریلا",
-  "Tinda Desi": "ٹنڈا دیسی",
-  "Pumpkin": "کدو",
-  "Cauliflower": "پھول گوبھی",
-  "Peas": "مٹر",
-  "Turnip": "شلجم",
-  "Radish": "مولی",
-  "Carrot": "گاجر",
-  "Paddy (IRRI)": "دھان اری",
-  "Cabbage": "بند گوبھی",
-  "Ginger (Thai)": "تھائی ادرک",
-  "Garlic (Local)": "مقامی لہسن",
-  "Cucumber (Kheera)": "کھیرا",
-  "Green Chilli": "ہری مرچ",
-  "Capsicum (شملہ مرچ)": "شملہ مرچ",
-  "Bottle Gourd (کدو)": "لوکی",
-  "Zucchini (گھیا توری)": "گھیا توری",
-  "Fenugreek(میتھی)": "میتھی",
-  "Mongray": "مونگری",
-  "Sugar": "چینی",
-  "Cocoyam(اروی)": "اروی",
-  "Mustard Greens(ساگ سرسوں)": "ساگ سرسوں",
-  "Carrot China": "چائنا گاجر",
-  "Coriander (دھنیا)": "دھنیا",
-  "Mint(پودینہ)": "پودینہ",
-  "Turmeric Whole(ثابت ہلدی)": "ہلدی ثابت",
-  "green chickpeas(چھولیا)": "چھولیا",
-  "Green Onion": "ہری پیاز",
-  "Batho": "باتھو",
-  "Potato Sugar free": "آلو شوگر فری",
-  "Gram White(local)": "سفید چنا مقامی",
-  "Tindian": "ٹنڈیاں",
-  "Suger Beet(چقندر)": "چقندر",
-  "Water chestnut(سنگھاڑا)": "سنگھاڑا",
-  "BeetRoot(چقندر)": "چقندر",
-  "Apple Kala Kullu (Pahari)": "سیب کالا کلو پہاڑی",
-  "Apple (Golden)": "سیب گولڈن",
-  "Apple (Ammre)": "سیب امری",
-  "Banana(DOZEN)": "کیلا (درجن)",
-  "Guava": "امرود",
-  "Orange(100Pcs)": "سنگترہ (100 عدد)",
-  "Kinnow (100Pcs)": "کینو (100 عدد)",
-  "Gram Black": "کالا چنا",
-  "Pomegranate(Kandhari)": "انار قندھاری",
-  "Grapes (Other)": "انگور دیگر",
-  "Mango(Chounsa)": "آم چونسا",
-  "Mango(Desahri)": "آم دسہری",
-  "Mango(Sindhri)": "آم سندھری",
-  "Pomegranate(Badana)": "انار بدانہ",
-  "Musambi(100Pcs)": "موسمبی (100 عدد)",
-  "Grapefruit(100Pcs)": "گریپ فروٹ (100 عدد)",
-  "Mango(Anwer Ratol)": "آم انور رٹول",
-  "Gram Pulse": "چنا دال"
+  "Melon": {
+    "en": "Melon",
+    "ur": "خربوزہ"
+  },
+  "Watermelon": {
+    "en": "Watermelon",
+    "ur": "تربوز"
+  },
+  "Apple Kala Kullu (Madani)": {
+    "en": "Apple Kala Kullu (Madani)",
+    "ur": "سیب کالا کلو مدنی"
+  },
+  "Mango (Malda)": {
+    "en": "Mango (Malda)",
+    "ur": "آم مالدہ"
+  },
+  "Lychee": {
+    "en": "Lychee",
+    "ur": "لیچی"
+  },
+  "Strawberry": {
+    "en": "Strawberry",
+    "ur": "اسٹرابیری"
+  },
+  "Dates (Aseel)": {
+    "en": "Dates (Aseel)",
+    "ur": "کھجور عسیل"
+  },
+  "Apple (Gatcha)": {
+    "en": "Apple (Gatcha)",
+    "ur": "سیب گاچا"
+  },
+  "Lemon (Other)": {
+    "en": "Lemon (Other)",
+    "ur": "لیموں دیگر"
+  },
+  "Lemon (Desi)": {
+    "en": "Lemon (Desi)",
+    "ur": "دیسی لیموں"
+  },
+  "Lemon (China)": {
+    "en": "Lemon (China)",
+    "ur": "چائنا لیموں"
+  },
+  "Moong": {
+    "en": "Moong",
+    "ur": "مونگ"
+  },
+  "Peach": {
+    "en": "Peach",
+    "ur": "آڑو"
+  },
+  "Peach Special": {
+    "en": "Peach Special",
+    "ur": "آڑو اسپیشل"
+  },
+  "Plum": {
+    "en": "Plum",
+    "ur": "آلو بخارا"
+  },
+  "Mango Saharni": {
+    "en": "Mango Saharni",
+    "ur": "آم سہرنی"
+  },
+  "Mango Desi": {
+    "en": "Mango Desi",
+    "ur": "دیسی آم"
+  },
+  "Apricot Yellow": {
+    "en": "Apricot Yellow",
+    "ur": "زرد خوبانی"
+  },
+  "Apricot White": {
+    "en": "Apricot White",
+    "ur": "سفید خوبانی"
+  },
+  "Pomegranate Desi": {
+    "en": "Pomegranate Desi",
+    "ur": "دیسی انار"
+  },
+  "Grapes Gola": {
+    "en": "Grapes Gola",
+    "ur": "انگور گولا"
+  },
+  "Grapes Sundekhani": {
+    "en": "Grapes Sundekhani",
+    "ur": "انگور سندیکھانی"
+  },
+  "Moong Pulse": {
+    "en": "Moong Pulse",
+    "ur": "دال مونگ"
+  },
+  "Pear": {
+    "en": "Pear",
+    "ur": "ناشپاتی"
+  },
+  "Sweet Musk Melon": {
+    "en": "Sweet Musk Melon",
+    "ur": "میٹھا خربوزہ"
+  },
+  "Sweet Musk Melon (Shireen)": {
+    "en": "Sweet Musk Melon (Shireen)",
+    "ur": "میٹھا خربوزہ شیرین"
+  },
+  "Jaman": {
+    "en": "Jaman",
+    "ur": "جامن"
+  },
+  "Persimmon(جاپانی پھل)": {
+    "en": "Persimmon",
+    "ur": "جاپانی پھل"
+  },
+  "Sweet Potato(شکر قندی)": {
+    "en": "Sweet Potato",
+    "ur": "شکر قندی"
+  },
+  "jujube(بیر)": {
+    "en": "Jujube",
+    "ur": "بیر"
+  },
+  "Cocunut": {
+    "en": "Cocunut",
+    "ur": "ناریل"
+  },
+  "Papaya(پپیتا)": {
+    "en": "Papaya",
+    "ur": "پپیتا"
+  },
+  "sugarcane(گنڈ یری)": {
+    "en": "Sugarcane",
+    "ur": "گنا (گنڈیری)"
+  },
+  "sugarcane": {
+    "en": "Sugarcane",
+    "ur": "گنا"
+  },
+  "Sugarcane": {
+    "en": "Sugarcane",
+    "ur": "گنا"
+  },
+  "Sugar Cane": {
+    "en": "Sugar Cane",
+    "ur": "گنا"
+  },
+  "sugar cane": {
+    "en": "sugar cane",
+    "ur": "گنا"
+  },
+  "Mash": {
+    "en": "Mash",
+    "ur": "ماش"
+  },
+  "feutral early(100 Pcs) فروٹر": {
+    "en": "Feutral Early(100 Pcs)",
+    "ur": "فروٹر (100 عدد)"
+  },
+  "Loquat": {
+    "en": "Loquat",
+    "ur": "لوکاٹ"
+  },
+  "Dates(Irani)": {
+    "en": "Dates(Irani)",
+    "ur": "کھجور ایرانی"
+  },
+  "Dates (Irani)": {
+    "en": "Dates (Irani)",
+    "ur": "کھجور ایرانی"
+  },
+  "Mash Pulse(Imported) washed": {
+    "en": "Mash Pulse(Imported) washed",
+    "ur": "ماش دال درآمد شدہ"
+  },
+  "Mash Pulse (Imported) washed": {
+    "en": "Mash Pulse (Imported) washed",
+    "ur": "ماش دال درآمد شدہ"
+  },
+  "Masoor Whole(local)": {
+    "en": "Masoor Whole(local)",
+    "ur": "مسور ثابت (مقامی)"
+  },
+  "Masoor Whole (local)": {
+    "en": "Masoor Whole (local)",
+    "ur": "مسور ثابت (مقامی)"
+  },
+  "Masoor Pulse(local)": {
+    "en": "Masoor Pulse(local)",
+    "ur": "مسور دال (مقامی)"
+  },
+  "Masoor Pulse (local)": {
+    "en": "Masoor Pulse (local)",
+    "ur": "مسور دال (مقامی)"
+  },
+  "Maize": {
+    "en": "Maize",
+    "ur": "مکئی"
+  },
+  "Millet": {
+    "en": "Millet",
+    "ur": "باجرا"
+  },
+  "Sorghum": {
+    "en": "Sorghum",
+    "ur": "جواری"
+  },
+  "RapeSeed (Torya)": {
+    "en": "RapeSeed (Torya)",
+    "ur": "توریا"
+  },
+  "Wheat": {
+    "en": "Wheat",
+    "ur": "گندم"
+  },
+  "Red Chilli Whole (Dry)": {
+    "en": "Red Chilli Whole (Dry)",
+    "ur": "لال مرچ ثابت خشک"
+  },
+  "Seed Cotton(Phutti)": {
+    "en": "Seed Cotton(Phutti)",
+    "ur": "پھٹی"
+  },
+  "Banola": {
+    "en": "Banola",
+    "ur": "بنولا"
+  },
+  "Banola Cake": {
+    "en": "Banola Cake",
+    "ur": "بنولا کھل"
+  },
+  "Green Fodder": {
+    "en": "Green Fodder",
+    "ur": "سبز چارہ"
+  },
+  "Wheat Straw": {
+    "en": "Wheat Straw",
+    "ur": "گندم بھوسہ"
+  },
+  "Rice Basmati Super (Old)": {
+    "en": "Rice Basmati Super (Old)",
+    "ur": "چاول باسمتی سپر پرانا"
+  },
+  "Rice Basmati (385)": {
+    "en": "Rice Basmati (385)",
+    "ur": "چاول باسمتی 385"
+  },
+  "Groundnut": {
+    "en": "Groundnut",
+    "ur": "مونگ پھلی"
+  },
+  "Jaggery (گڑ)": {
+    "en": "Jaggery",
+    "ur": "گڑ"
+  },
+  "Rice Basmati Super (New)": {
+    "en": "Rice Basmati Super (New)",
+    "ur": "چاول باسمتی سپر نیا"
+  },
+  "Mash Pulse(local)": {
+    "en": "Mash Pulse(local)",
+    "ur": "ماش دال (مقامی)"
+  },
+  "Gram White(Imported)": {
+    "en": "Gram White(Imported)",
+    "ur": "سفید چنا درآمد شدہ"
+  },
+  "Masoor Whole (Imported)": {
+    "en": "Masoor Whole (Imported)",
+    "ur": "مسور ثابت درآمد شدہ"
+  },
+  "Masoor Pulse (Imported)": {
+    "en": "Masoor Pulse (Imported)",
+    "ur": "مسور دال درآمد شدہ"
+  },
+  "Gram Flour (بیسن)": {
+    "en": "Gram Flour",
+    "ur": "بیسن"
+  },
+  "Paddy Kainat": {
+    "en": "Paddy Kainat",
+    "ur": "دھان کائنات"
+  },
+  "Rice Kainat (New)": {
+    "en": "Rice Kainat (New)",
+    "ur": "چاول کائنات نیا"
+  },
+  "Sunflower": {
+    "en": "Sunflower",
+    "ur": "سورج مکھی"
+  },
+  "Canola": {
+    "en": "Canola",
+    "ur": "کینولا"
+  },
+  "Sesame(تِل)": {
+    "en": "Sesame",
+    "ur": "تل"
+  },
+  "Rice (IRRI)": {
+    "en": "Rice (IRRI)",
+    "ur": "چاول اری"
+  },
+  "Mustard seed": {
+    "en": "Mustard seed",
+    "ur": "سرسوں دانہ"
+  },
+  "Brown Sugar(شکر)": {
+    "en": "Brown Sugar",
+    "ur": "شکر"
+  },
+  "Barley(جو)": {
+    "en": "Barley",
+    "ur": "جو"
+  },
+  "Potato Fresh": {
+    "en": "Potato Fresh",
+    "ur": "آلو تازہ"
+  },
+  "Potato Store": {
+    "en": "Potato Store",
+    "ur": "آلو ذخیرہ"
+  },
+  "Onion": {
+    "en": "Onion",
+    "ur": "پیاز"
+  },
+  "Garlic (China)": {
+    "en": "Garlic (China)",
+    "ur": "چائنا لہسن"
+  },
+  "Ginger(China)": {
+    "en": "Ginger(China)",
+    "ur": "چائنا ادرک"
+  },
+  "Tomato": {
+    "en": "Tomato",
+    "ur": "ٹماٹر"
+  },
+  "Spinach": {
+    "en": "Spinach",
+    "ur": "پالک"
+  },
+  "Paddy Basmati": {
+    "en": "Paddy Basmati",
+    "ur": "دھان باسمتی"
+  },
+  "Brinjal": {
+    "en": "Brinjal",
+    "ur": "بینگن"
+  },
+  "Lady Finger/Okra (بھنڈی توری)": {
+    "en": "Lady Finger/Okra",
+    "ur": "بھنڈی"
+  },
+  "Bitter Gourd (کریلا)": {
+    "en": "Bitter Gourd",
+    "ur": "کریلا"
+  },
+  "Tinda Desi": {
+    "en": "Tinda Desi",
+    "ur": "ٹنڈا دیسی"
+  },
+  "Pumpkin": {
+    "en": "Pumpkin",
+    "ur": "کدو"
+  },
+  "Cauliflower": {
+    "en": "Cauliflower",
+    "ur": "پھول گوبھی"
+  },
+  "Peas": {
+    "en": "Peas",
+    "ur": "مٹر"
+  },
+  "Turnip": {
+    "en": "Turnip",
+    "ur": "شلجم"
+  },
+  "Radish": {
+    "en": "Radish",
+    "ur": "مولی"
+  },
+  "Carrot": {
+    "en": "Carrot",
+    "ur": "گاجر"
+  },
+  "Paddy (IRRI)": {
+    "en": "Paddy (IRRI)",
+    "ur": "دھان اری"
+  },
+  "Cabbage": {
+    "en": "Cabbage",
+    "ur": "بند گوبھی"
+  },
+  "Ginger (Thai)": {
+    "en": "Ginger (Thai)",
+    "ur": "تھائی ادرک"
+  },
+  "Garlic (Local)": {
+    "en": "Garlic (Local)",
+    "ur": "مقامی لہسن"
+  },
+  "Cucumber (Kheera)": {
+    "en": "Cucumber (Kheera)",
+    "ur": "کھیرا"
+  },
+  "Green Chilli": {
+    "en": "Green Chilli",
+    "ur": "ہری مرچ"
+  },
+  "Capsicum (شملہ مرچ)": {
+    "en": "Capsicum",
+    "ur": "شملہ مرچ"
+  },
+  "Bottle Gourd (کدو)": {
+    "en": "Bottle Gourd",
+    "ur": "لوکی"
+  },
+  "Zucchini (گھیا توری)": {
+    "en": "Zucchini",
+    "ur": "گھیا توری"
+  },
+  "Fenugreek(میتھی)": {
+    "en": "Fenugreek",
+    "ur": "میتھی"
+  },
+  "Mongray": {
+    "en": "Mongray",
+    "ur": "مونگری"
+  },
+  "Sugar": {
+    "en": "Sugar",
+    "ur": "چینی"
+  },
+  "Cocoyam(اروی)": {
+    "en": "Cocoyam",
+    "ur": "اروی"
+  },
+  "Mustard Greens(ساگ سرسوں)": {
+    "en": "Mustard Greens",
+    "ur": "ساگ سرسوں"
+  },
+  "Carrot China": {
+    "en": "Carrot China",
+    "ur": "چائنا گاجر"
+  },
+  "Coriander (دھنیا)": {
+    "en": "Coriander",
+    "ur": "دھنیا"
+  },
+  "Mint(پودینہ)": {
+    "en": "Mint",
+    "ur": "پودینہ"
+  },
+  "Turmeric Whole(ثابت ہلدی)": {
+    "en": "Turmeric Whole",
+    "ur": "ہلدی ثابت"
+  },
+  "green chickpeas(چھولیا)": {
+    "en": "green chickpeas",
+    "ur": "چھولیا"
+  },
+  "Green Onion": {
+    "en": "Green Onion",
+    "ur": "ہری پیاز"
+  },
+  "Batho": {
+    "en": "Batho",
+    "ur": "باتھو"
+  },
+  "Potato Sugar free": {
+    "en": "Potato Sugar free",
+    "ur": "آلو شوگر فری"
+  },
+  "Gram White(local)": {
+    "en": "Gram White(local)",
+    "ur": "سفید چنا مقامی"
+  },
+  "Tindian": {
+    "en": "Tindian",
+    "ur": "ٹنڈیاں"
+  },
+  "Suger Beet(چقندر)": {
+    "en": "Suger Beet",
+    "ur": "چقندر"
+  },
+  "Water chestnut(سنگھاڑا)": {
+    "en": "Water chestnut",
+    "ur": "سنگھاڑا"
+  },
+  "BeetRoot(چقندر)": {
+    "en": "BeetRoot",
+    "ur": "چقندر"
+  },
+  "Apple Kala Kullu (Pahari)": {
+    "en": "Apple Kala Kullu (Pahari)",
+    "ur": "سیب کالا کلو پہاڑی"
+  },
+  "Apple (Golden)": {
+    "en": "Apple (Golden)",
+    "ur": "سیب گولڈن"
+  },
+  "Apple (Ammre)": {
+    "en": "Apple (Ammre)",
+    "ur": "سیب امری"
+  },
+  "Banana(DOZEN)": {
+    "en": "Banana(DOZEN)",
+    "ur": "کیلا (درجن)"
+  },
+  "Banana (DOZEN)": {
+    "en": "Banana (DOZEN)",
+    "ur": "کیلا (درجن)"
+  },
+  "Guava": {
+    "en": "Guava",
+    "ur": "امرود"
+  },
+  "Orange(100Pcs)": {
+    "en": "Orange(100Pcs)",
+    "ur": "سنگترہ (100 عدد)"
+  },
+  "Orange (100Pcs)": {
+    "en": "Orange (100Pcs)",
+    "ur": "سنگترہ (100 عدد)"
+  },
+  "Kinnow (100Pcs)": {
+    "en": "Kinnow (100Pcs)",
+    "ur": "کینو (100 عدد)"
+  },
+  "Gram Black": {
+    "en": "Gram Black",
+    "ur": "کالا چنا"
+  },
+  "Pomegranate(Kandhari)": {
+    "en": "Pomegranate(Kandhari)",
+    "ur": "انار قندھاری"
+  },
+  "Pomegranate (Kandhari)": {
+    "en": "Pomegranate (Kandhari)",
+    "ur": "انار قندھاری"
+  },
+  "Grapes (Other)": {
+    "en": "Grapes (Other)",
+    "ur": "انگور دیگر"
+  },
+  "Mango(Chounsa)": {
+    "en": "Mango(Chounsa)",
+    "ur": "آم چونسا"
+  },
+  "Mango (Chounsa)": {
+    "en": "Mango (Chounsa)",
+    "ur": "آم چونسا"
+  },
+  "Mango(Desahri)": {
+    "en": "Mango(Desahri)",
+    "ur": "آم دسہری"
+  },
+  "Mango (Desahri)": {
+    "en": "Mango (Desahri)",
+    "ur": "آم دسہری"
+  },
+  "Mango(Sindhri)": {
+    "en": "Mango(Sindhri)",
+    "ur": "آم سندھری"
+  },
+  "Mango (Sindhri)": {
+    "en": "Mango (Sindhri)",
+    "ur": "آم سندھری"
+  },
+  "Pomegranate(Badana)": {
+    "en": "Pomegranate(Badana)",
+    "ur": "انار بدانہ"
+  },
+  "Pomegranate (Badana)": {
+    "en": "Pomegranate (Badana)",
+    "ur": "انار بدانہ"
+  },
+  "Musambi(100Pcs)": {
+    "en": "Musambi(100Pcs)",
+    "ur": "موسمبی (100 عدد)"
+  },
+  "Musambi (100Pcs)": {
+    "en": "Musambi (100Pcs)",
+    "ur": "موسمبی (100 عدد)"
+  },
+  "Grapefruit(100Pcs)": {
+    "en": "Grapefruit(100Pcs)",
+    "ur": "گریپ فروٹ (100 عدد)"
+  },
+  "Grapefruit (100Pcs)": {
+    "en": "Grapefruit (100Pcs)",
+    "ur": "گریپ فروٹ (100 عدد)"
+  },
+  "Mango(Anwer Ratol)": {
+    "en": "Mango(Anwer Ratol)",
+    "ur": "آم انور رٹول"
+  },
+  "Mango (Anwer Ratol)": {
+    "en": "Mango (Anwer Ratol)",
+    "ur": "آم انور رٹول"
+  },
+  "Gram Pulse": {
+    "en": "Gram Pulse",
+    "ur": "چنا دال"
+  }
 }

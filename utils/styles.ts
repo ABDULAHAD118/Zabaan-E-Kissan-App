@@ -141,7 +141,6 @@ export const getTextStyle = (colorScheme: ColorScheme, variant: 'title' | 'subti
       return {
         ...baseStyle,
         fontSize: 28,
-          lineHeight: 45,
         fontWeight: 'bold' as const,
       };
     case 'subtitle':

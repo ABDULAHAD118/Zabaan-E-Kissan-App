@@ -119,8 +119,9 @@ export default function LocationPicker({
     }, [t]);
 
     useEffect(() => {
-        if (Platform.OS !== 'web') requestLocationPermission();
-    }, [requestLocationPermission]);
+        if (!visible || Platform.OS === 'web') return;
+        void requestLocationPermission();
+    }, [visible, requestLocationPermission]);
 
     // ------------------- SEARCH -------------------
 

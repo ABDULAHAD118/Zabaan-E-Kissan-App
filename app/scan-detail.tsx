@@ -31,10 +31,6 @@ export default function ScanDetailScreen() {
 
     const buildScanPrompt = (scan: DiseaseScanResult) => {
         const cropDisease = scan.predicted_class.replace(/_/g, ' ');
-        const topPredictions = scan.top_3_predictions
-            .map((prediction, index) => `${index + 1}. ${prediction.class_name.replace(/_/g, ' ')} (${prediction.confidence.toFixed(2)}%)`)
-            .join('\n');
-
         if (i18n.language === 'ur') {
             return [
                 `میری فصل اسکین رپورٹ کی تفصیل:`,
@@ -44,7 +40,6 @@ export default function ScanDetailScreen() {
                 `شدت: ${scan.severity_range}`,
                 `تفصیل: ${scan.description_ur || scan.description}`,
                 `تجویز کردہ اقدام: ${scan.recommended_action_ur || scan.recommended_action}`,
-                `ٹاپ پیش گوئیاں:\n${topPredictions}`,
                 `براہ کرم کسان کے لیے آسان زبان میں مکمل رہنمائی دیں: وجہ، فوری علاج، اگلے 7 دن کا پلان، اور احتیاطی تدابیر۔`,
             ].join('\n');
         }
@@ -57,7 +52,6 @@ export default function ScanDetailScreen() {
             `Severity: ${scan.severity_range}`,
             `Description: ${scan.description}`,
             `Recommended action: ${scan.recommended_action}`,
-            `Top predictions:\n${topPredictions}`,
             `Please explain this in simple farmer-friendly language: cause, immediate treatment, next 7-day plan, and prevention steps.`,
         ].join('\n');
     };
@@ -166,7 +160,7 @@ export default function ScanDetailScreen() {
                         <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '600', color: getColor(colorScheme, 'text'), marginBottom: getSpacing('sm')}}>
                             {t('home.description')}
                         </ThemedText>
-                        <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'text'), lineHeight: 24}}>
+                        <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'text')}}>
                             {i18n.language === 'ur' ? detectionResult.description_ur : detectionResult.description}
                         </ThemedText>
                     </View>
@@ -177,57 +171,12 @@ export default function ScanDetailScreen() {
                             <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '600', color: getColor(colorScheme, 'primary'), marginBottom: getSpacing('sm')}}>
                                 ⚡ {t('home.recommendedAction')}
                             </ThemedText>
-                            <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'primary'), lineHeight: 24}}>
+                            <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'primary')}}>
                                 {i18n.language === 'ur' ? detectionResult.recommended_action_ur : detectionResult.recommended_action}
                             </ThemedText>
                         </View>
                     )}
 
-                    {/* Top 3 Predictions */}
-                    <View style={{marginBottom: getSpacing('lg')}}>
-                        <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '600', color: getColor(colorScheme, 'text'), marginBottom: getSpacing('md'), fontSize: 18}}>
-                            {t('home.topPredictions')}
-                        </ThemedText>
-                        {detectionResult.top_3_predictions.map((pred, index) => (
-                            <View
-                                key={index}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    paddingVertical: getSpacing('sm'),
-                                    paddingHorizontal: getSpacing('sm'),
-                                    marginBottom: getSpacing('xs'),
-                                    borderRadius: 8,
-                                    backgroundColor: index === 0 ? getColor(colorScheme, 'highlight') : getColor(colorScheme, 'surface'),
-                                    borderWidth: 1,
-                                    borderColor: index === 0 ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'outline')
-                                }}
-                            >
-                                <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-                                    <View style={{
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: 16,
-                                        backgroundColor: index === 0 ? getColor(colorScheme, 'primary') : getColor(colorScheme, 'outline'),
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        marginRight: getSpacing('sm')
-                                    }}>
-                                        <ThemedText style={{fontSize: 14, fontWeight: '700', color: getColor(colorScheme, 'buttonText')}}>
-                                            {index + 1}
-                                        </ThemedText>
-                                    </View>
-                                    <ThemedText style={{...getTextStyle(colorScheme, 'body'), color: getColor(colorScheme, 'text'), flex: 1}}>
-                                        {pred.class_name.replace(/_/g, ' ')}
-                                    </ThemedText>
-                                </View>
-                                <ThemedText style={{...getTextStyle(colorScheme, 'body'), fontWeight: '700', color: getColor(colorScheme, 'primary'), marginLeft: getSpacing('sm')}}>
-                                    {pred.confidence.toFixed(2)}%
-                                </ThemedText>
-                            </View>
-                        ))}
-                    </View>
 
                     <TouchableOpacity
                         style={{

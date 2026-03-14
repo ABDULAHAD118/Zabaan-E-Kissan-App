@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {ActivityIndicator, Alert, Linking, Modal, TouchableOpacity, View} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from './ThemedText';
@@ -47,31 +47,39 @@ export default function VoiceInput({ onTranscript, disabled = false }: VoiceInpu
         }
     });
 
-    useEffect(() => {
-        (async () => {
-            const status = await AudioModule.requestRecordingPermissionsAsync();
+    const ensureMicPermission = async (): Promise<boolean> => {
+        const status = await AudioModule.requestRecordingPermissionsAsync();
 
-            if (!status.granted) {
-                Alert.alert(
-                    t('chat.permissionDenied'),
-                    t('chat.micPermissionMessage'),
-                    [
-                        { text: t('common.cancel'), style: 'cancel' },
-                        { text: t('common.settings'), onPress: () => Linking.openSettings() },
-                    ]
-                );
+        if (status.granted) {
+            return true;
+        }
+
+        Alert.alert(
+            t('chat.permissionDenied'),
+            t('chat.micPermissionMessage'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                { text: t('common.settings'), onPress: () => Linking.openSettings() },
+            ]
+        );
+
+        return false;
+    };
+
+    const startRecording = async () => {
+        try {
+            setIsProcessing(true);
+
+            const hasPermission = await ensureMicPermission();
+            if (!hasPermission) {
+                setIsProcessing(false);
+                return;
             }
 
             await setAudioModeAsync({
                 playsInSilentMode: true,
                 allowsRecording: true,
             });
-        })();
-    }, [t]);
-
-    const startRecording = async () => {
-        try {
-            setIsProcessing(true);
 
             await audioRecorder.prepareToRecordAsync();
             audioRecorder.record();

@@ -48,6 +48,18 @@ export default function PricesScreen() {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [tempPickerDate, setTempPickerDate] = useState(new Date());
 
+    const isAllCropsSelection = (value: string) => {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return true;
+        const localizedAll = t('prices.allCrops').trim().toLowerCase();
+        return normalized === 'all' || normalized === 'all crops' || normalized === localizedAll;
+    };
+
+    const isCityFilterActive = Boolean(selectedCity);
+    const isCropFilterActive = !isAllCropsSelection(selectedCrop);
+    const isDateFilterActive = Boolean(selectedSpecificDate);
+    const activeFilterCount = Number(isCityFilterActive) + Number(isCropFilterActive) + Number(isDateFilterActive);
+
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [pageLimit] = useState(20); // Items per page
@@ -77,7 +89,7 @@ export default function PricesScreen() {
             }
         }
 
-        if (selectedCrop) {
+        if (selectedCrop && !isAllCropsSelection(selectedCrop)) {
             filters.crop = selectedCrop;
         }
 
@@ -104,6 +116,14 @@ export default function PricesScreen() {
     // Extract data and pagination from response
     const cropPrices = pricesResponse?.data || [];
     const pagination = pricesResponse?.pagination;
+    const hasNextPage = Boolean(pagination?.has_next);
+    const isFetchingNextPage = pricesLoading && currentPage > 1;
+
+    const handleEndReached = () => {
+        if (hasNextPage && !isFetchingNextPage) {
+            setCurrentPage((prev) => prev + 1);
+        }
+    };
 
     // Clear all filters
     const clearAllFilters = () => {
@@ -116,7 +136,7 @@ export default function PricesScreen() {
     };
 
     // Check if any filters are active
-    const hasActiveFilters = selectedCity || selectedCrop || selectedDateRange || selectedSpecificDate;
+    const hasActiveFilters = activeFilterCount > 0;
 
     // Handle date picker change
     const onDatePickerChange = (event: any, date?: Date) => {
@@ -300,7 +320,7 @@ export default function PricesScreen() {
                             fontWeight: '600',
                             color: hasActiveFilters ? getColor(colorScheme, 'buttonText') : getColor(colorScheme, 'text')
                         }}>
-                            {t('prices.filters')} {hasActiveFilters ? `(${[selectedCity, selectedCrop, selectedDateRange, selectedSpecificDate].filter(Boolean).length})` : ''}
+                            {t('prices.filters')} {hasActiveFilters ? `(${activeFilterCount})` : ''}
                         </ThemedText>
                     </TouchableOpacity>
 
@@ -327,6 +347,79 @@ export default function PricesScreen() {
                         </TouchableOpacity>
                     )}
                 </View>
+
+                {hasActiveFilters && (
+                    <View style={{
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+                        marginBottom: getSpacing('sm')
+                    }}>
+                        {isCityFilterActive && (
+                            <TouchableOpacity
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    borderWidth: 1,
+                                    borderColor: getColor(colorScheme, 'outline'),
+                                    borderRadius: 16,
+                                    backgroundColor: getColor(colorScheme, 'surface'),
+                                    paddingHorizontal: getSpacing('sm'),
+                                    paddingVertical: getSpacing('xs'),
+                                    marginRight: getSpacing('sm'),
+                                    marginBottom: getSpacing('sm')
+                                }}
+                                onPress={() => setSelectedCity("")}
+                            >
+                                <ThemedText style={{color: getColor(colorScheme, 'text')}}>{t('prices.location')}</ThemedText>
+                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')} style={{marginLeft: 6}} />
+                            </TouchableOpacity>
+                        )}
+
+                        {isCropFilterActive && (
+                            <TouchableOpacity
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    borderWidth: 1,
+                                    borderColor: getColor(colorScheme, 'outline'),
+                                    borderRadius: 16,
+                                    backgroundColor: getColor(colorScheme, 'surface'),
+                                    paddingHorizontal: getSpacing('sm'),
+                                    paddingVertical: getSpacing('xs'),
+                                    marginRight: getSpacing('sm'),
+                                    marginBottom: getSpacing('sm')
+                                }}
+                                onPress={() => setSelectedCrop("")}
+                            >
+                                <ThemedText style={{color: getColor(colorScheme, 'text')}}>{t('prices.cropType')}</ThemedText>
+                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')} style={{marginLeft: 6}} />
+                            </TouchableOpacity>
+                        )}
+
+                        {isDateFilterActive && (
+                            <TouchableOpacity
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    borderWidth: 1,
+                                    borderColor: getColor(colorScheme, 'outline'),
+                                    borderRadius: 16,
+                                    backgroundColor: getColor(colorScheme, 'surface'),
+                                    paddingHorizontal: getSpacing('sm'),
+                                    paddingVertical: getSpacing('xs'),
+                                    marginBottom: getSpacing('sm')
+                                }}
+                                onPress={() => {
+                                    setSelectedSpecificDate(null);
+                                    setSelectedDateRange("");
+                                }}
+                            >
+                                <ThemedText style={{color: getColor(colorScheme, 'text')}}>{t('prices.date')}</ThemedText>
+                                <Ionicons name="close" size={14} color={getColor(colorScheme, 'text')} style={{marginLeft: 6}} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
 
                 {/* Collapsible Filters */}
                 {showFilters && (
@@ -465,10 +558,13 @@ export default function PricesScreen() {
 
 
             {/* Scrollable Content */}
-            <ScrollView
-                style={{flex: 1}}
-                contentContainerStyle={{paddingHorizontal: 16, paddingTop: getSpacing('md')}}
+            <FlatList
+                data={cropPrices}
+                keyExtractor={(item) => item._id}
+                contentContainerStyle={{paddingHorizontal: 16, paddingTop: getSpacing('md'), paddingBottom: getSpacing('md')}}
                 showsVerticalScrollIndicator={false}
+                onEndReached={handleEndReached}
+                onEndReachedThreshold={0.3}
                 refreshControl={
                     <RefreshControl
                         refreshing={citiesLoading || pricesLoading || cropsLoading}
@@ -477,416 +573,230 @@ export default function PricesScreen() {
                         tintColor={getColor(colorScheme, 'primary')}
                     />
                 }
-            >
-                {citiesLoading || pricesLoading || cropsLoading ? (
-                    <View style={{
-                        flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingVertical: 80
-                    }}>
-                        <ActivityIndicator size="large" color={getColor(colorScheme, 'primary')}/>
-                        <ThemedText style={{
-                            marginTop: getSpacing('md'),
-                            color: getColor(colorScheme, 'text')
+                ListHeaderComponent={
+                    <View style={getCardStyle(colorScheme)}>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: getSpacing('sm')
                         }}>
-                            {t('prices.loading')}
-                        </ThemedText>
-                    </View>
-                ) : (
-                    <>
-                        {/* Market Info Card */}
-                        <View style={getCardStyle(colorScheme)}>
+                            <ThemedText style={{
+                                ...getTextStyle(colorScheme, 'heading'),
+                                color: getColor(colorScheme, 'primary')
+                            }}>
+                                {selectedCity ? getCityName(cities.find(city => city._id === selectedCity)?.name || '', i18n.language) : t('prices.allCities')} {t('prices.cityMarket')}
+                            </ThemedText>
                             <View style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginBottom: getSpacing('sm')
+                                paddingHorizontal: getSpacing('sm'),
+                                paddingVertical: getSpacing('xs'),
                             }}>
                                 <ThemedText style={{
-                                    ...getTextStyle(colorScheme, 'heading'),
-                                    color: getColor(colorScheme, 'primary')
+                                    fontSize: 14,
+                                    color: getColor(colorScheme, 'text')
                                 }}>
-                                    {selectedCity ? getCityName(cities.find(city => city._id === selectedCity)?.name || '', i18n.language) : t('prices.allCities')} {t('prices.cityMarket')}
+                                    {t('prices.lastUpdated')}: {new Date().toLocaleDateString()}
                                 </ThemedText>
+                            </View>
+                        </View>
+                    </View>
+                }
+                ListEmptyComponent={
+                    (citiesLoading || pricesLoading || cropsLoading) ? (
+                        <View style={{
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            paddingVertical: 80
+                        }}>
+                            <ActivityIndicator size="large" color={getColor(colorScheme, 'primary')}/>
+                            <ThemedText style={{
+                                marginTop: getSpacing('md'),
+                                color: getColor(colorScheme, 'text')
+                            }}>
+                                {t('prices.loading')}
+                            </ThemedText>
+                        </View>
+                    ) : (
+                        <View style={{
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            paddingVertical: 80
+                        }}>
+                            <FontAwesome6 name="search" size={48} color={getColor(colorScheme, 'outline')}/>
+                            <ThemedText style={{
+                                marginTop: getSpacing('md'),
+                                textAlign: 'center',
+                                color: getColor(colorScheme, 'text')
+                            }}>
+                                {hasActiveFilters ? t('prices.filterAdjustMessage') : t('prices.noFiltersMessage')}
+                            </ThemedText>
+                            <ThemedText style={{
+                                fontSize: 14,
+                                textAlign: 'center',
+                                color: getColor(colorScheme, 'outline'),
+                                marginTop: getSpacing('sm')
+                            }}>
+                                {hasActiveFilters ? t('prices.filterAdjustMessage') : t('prices.selectDifferentCity')}
+                            </ThemedText>
+                        </View>
+                    )
+                }
+                renderItem={({item: crop}) => {
+                    const priceData = getDisplayPrice(crop, i18n.language);
+                    return (
+                        <TouchableOpacity
+                            style={getPriceCardStyle(colorScheme)}
+                            onPress={() => handleCropPress(crop)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={{
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                marginBottom: getSpacing('lg')
+                            }}>
+                                <View style={{flex: 1}}>
+                                    <ThemedText style={{
+                                        fontSize: 22,
+                                        fontWeight: '700',
+                                        marginBottom: getSpacing('xs'),
+                                        color: getColor(colorScheme, 'text')
+                                    }}>
+                                        {getCropName(crop.crop, i18n.language)}
+                                    </ThemedText>
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        marginBottom: getSpacing('sm')
+                                    }}>
+                                        <Ionicons name="location" size={18} color={getColor(colorScheme, 'primary')}/>
+                                        <ThemedText style={{
+                                            marginLeft: getSpacing('xs'),
+                                            fontSize: 16,
+                                            fontWeight: '600',
+                                            color: getColor(colorScheme, 'text')
+                                        }}>
+                                            {getCityName(crop.city, i18n.language)}
+                                        </ThemedText>
+                                    </View>
+                                </View>
+                                <View style={{alignItems: 'flex-end'}}>
+                                    <View style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        paddingHorizontal: getSpacing('md'),
+                                        paddingVertical: getSpacing('sm'),
+                                        backgroundColor: getColor(colorScheme, 'primary') + '10',
+                                        borderRadius: 12,
+                                        borderWidth: 1,
+                                        borderColor: getColor(colorScheme, 'primary') + '30'
+                                    }}>
+                                        <Ionicons name="calendar" size={16} color={getColor(colorScheme, 'primary')}/>
+                                        <ThemedText style={{
+                                            marginLeft: getSpacing('xs'),
+                                            fontSize: 14,
+                                            fontWeight: '600',
+                                            color: getColor(colorScheme, 'primary')
+                                        }}>
+                                            {crop.date}
+                                        </ThemedText>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={{flexDirection: 'row', gap: getSpacing('md')}}>
                                 <View style={{
-                                    paddingHorizontal: getSpacing('sm'),
-                                    paddingVertical: getSpacing('xs'),
-                                    borderRadius: 12,
-                                    backgroundColor: getColor(colorScheme, 'primary')
+                                    flex: 1,
+                                    paddingVertical: getSpacing('lg'),
+                                    paddingHorizontal: getSpacing('md'),
+                                    backgroundColor: getColor(colorScheme, 'primary') + '10',
+                                    borderRadius: 16,
+                                    borderWidth: 2,
+                                    borderColor: getColor(colorScheme, 'primary'),
+                                    alignItems: 'center'
                                 }}>
                                     <ThemedText style={{
                                         fontSize: 12,
+                                        color: getColor(colorScheme, 'outline'),
+                                        marginBottom: getSpacing('xs'),
                                         fontWeight: '600',
-                                        color: getColor(colorScheme, 'buttonText')
+                                        letterSpacing: 0.5
                                     }}>
-                                        {cropPrices.length} {t('prices.noOfCrops')}
+                                        {t('prices.minPrice')}
+                                    </ThemedText>
+                                    <ThemedText style={{
+                                        fontSize: 20,
+                                        fontWeight: '600',
+                                        color: getColor(colorScheme, 'primary'),
+                                        marginBottom: getSpacing('xs')
+                                    }}>
+                                        Rs. {priceData.min}
+                                    </ThemedText>
+                                    <ThemedText style={{fontSize: 10, color: getColor(colorScheme, 'outline'), fontWeight: '600'}}>
+                                        {priceData.unitLabel}
+                                    </ThemedText>
+                                </View>
+
+                                <View style={{
+                                    flex: 1,
+                                    paddingVertical: getSpacing('lg'),
+                                    paddingHorizontal: getSpacing('md'),
+                                    backgroundColor: getColor(colorScheme, 'primary') + '10',
+                                    borderRadius: 16,
+                                    borderWidth: 2,
+                                    borderColor: getColor(colorScheme, 'primary'),
+                                    alignItems: 'center'
+                                }}>
+                                    <ThemedText style={{
+                                        fontSize: 12,
+                                        color: getColor(colorScheme, 'outline'),
+                                        marginBottom: getSpacing('xs'),
+                                        fontWeight: '600',
+                                        letterSpacing: 0.5
+                                    }}>
+                                        {t('prices.maxPrice')}
+                                    </ThemedText>
+                                    <ThemedText style={{
+                                        fontSize: 20,
+                                        fontWeight: '600',
+                                        color: getColor(colorScheme, 'primary'),
+                                        marginBottom: getSpacing('xs')
+                                    }}>
+                                        Rs. {priceData.max}
+                                    </ThemedText>
+                                    <ThemedText style={{fontSize: 10, color: getColor(colorScheme, 'outline'), fontWeight: '600'}}>
+                                        {priceData.unitLabel}
                                     </ThemedText>
                                 </View>
                             </View>
-                            <ThemedText style={{
-                                fontSize: 14,
-                                color: getColor(colorScheme, 'text')
+
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginTop: getSpacing('md'),
+                                paddingTop: getSpacing('md'),
+                                borderTopWidth: 1,
+                                borderTopColor: getColor(colorScheme, 'outline')
                             }}>
-                                {t('prices.lastUpdated')}: {new Date().toLocaleDateString()}
-                            </ThemedText>
+                                <Ionicons name="information-circle" size={16} color={getColor(colorScheme, 'primary')}/>
+                                <ThemedText style={{marginLeft: getSpacing('sm'), fontSize: 14, color: getColor(colorScheme, 'primary')}}>
+                                    {t('prices.tapForDetails')}
+                                </ThemedText>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                }}
+                ListFooterComponent={
+                    isFetchingNextPage ? (
+                        <View style={{alignItems: 'center', justifyContent: 'center', paddingVertical: getSpacing('lg')}}>
+                            <ActivityIndicator size="small" color={getColor(colorScheme, 'primary')} />
                         </View>
-
-                        {/* Crop Prices List */}
-                        {(() => {
-                            if (cropPrices.length === 0) {
-                                return (
-                                    <View style={{
-                                        flex: 1,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        paddingVertical: 80
-                                    }}>
-                                        <FontAwesome6 name="search" size={48} color={getColor(colorScheme, 'outline')}/>
-                                        <ThemedText style={{
-                                            marginTop: getSpacing('md'),
-                                            textAlign: 'center',
-                                            color: getColor(colorScheme, 'text')
-                                        }}>
-                                            {hasActiveFilters
-                                                ? t('prices.filterAdjustMessage')
-                                                : t('prices.noFiltersMessage')
-                                            }
-                                        </ThemedText>
-                                        <ThemedText style={{
-                                            fontSize: 14,
-                                            textAlign: 'center',
-                                            color: getColor(colorScheme, 'outline'),
-                                            marginTop: getSpacing('sm')
-                                        }}>
-                                            {hasActiveFilters
-                                                ? t('prices.filterAdjustMessage')
-                                                : t('prices.selectDifferentCity')
-                                            }
-                                        </ThemedText>
-                                    </View>
-                                );
-                            }
-
-                            return (
-                                <>
-                                    {cropPrices.map((crop) => (
-                                        <TouchableOpacity
-                                            key={crop._id}
-                                            style={getPriceCardStyle(colorScheme)}
-                                            onPress={() => handleCropPress(crop)}
-                                            activeOpacity={0.7}
-                                        >
-                                            {/* Card Header - Title and Date */}
-                                            <View style={{
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'flex-start',
-                                                marginBottom: getSpacing('lg')
-                                            }}>
-                                                <View style={{flex: 1}}>
-                                                    <ThemedText style={{
-                                                        fontSize: 22,
-                                                        fontWeight: '700',
-                                                        marginBottom: getSpacing('xs'),
-                                                        color: getColor(colorScheme, 'text')
-                                                    }}>
-                                                        {getCropName(crop.crop, i18n.language)}
-                                                    </ThemedText>
-
-                                                    <View style={{
-                                                        flexDirection: 'row',
-                                                        alignItems: 'center',
-                                                        marginBottom: getSpacing('sm')
-                                                    }}>
-                                                        <Ionicons name="location" size={18}
-                                                                  color={getColor(colorScheme, 'primary')}/>
-                                                        <ThemedText style={{
-                                                            marginLeft: getSpacing('xs'),
-                                                            fontSize: 16,
-                                                            fontWeight: '600',
-                                                            color: getColor(colorScheme, 'text')
-                                                        }}>
-                                                            {getCityName(crop.city, i18n.language)}
-                                                        </ThemedText>
-                                                    </View>
-                                                </View>
-
-                                                <View style={{
-                                                    alignItems: 'flex-end'
-                                                }}>
-                                                    <View style={{
-                                                        flexDirection: 'row',
-                                                        alignItems: 'center',
-                                                        paddingHorizontal: getSpacing('md'),
-                                                        paddingVertical: getSpacing('sm'),
-                                                        backgroundColor: getColor(colorScheme, 'primary') + '10',
-                                                        borderRadius: 12,
-                                                        borderWidth: 1,
-                                                        borderColor: getColor(colorScheme, 'primary') + '30'
-                                                    }}>
-                                                        <Ionicons name="calendar" size={16}
-                                                                  color={getColor(colorScheme, 'primary')}/>
-                                                        <ThemedText style={{
-                                                            marginLeft: getSpacing('xs'),
-                                                            fontSize: 14,
-                                                            fontWeight: '600',
-                                                            color: getColor(colorScheme, 'primary')
-                                                        }}>
-                                                            {crop.date}
-                                                        </ThemedText>
-                                                    </View>
-                                                </View>
-                                            </View>
-
-                                            {/* Price Display - Min/Max Only */}
-                                            {(() => {
-                                                const priceData = getDisplayPrice(crop, i18n.language);
-                                                return (
-                                                    <View style={{
-                                                        flexDirection: 'row',
-                                                        gap: getSpacing('md')
-                                                    }}>
-                                                        {/* Min Price Card */}
-                                                        <View style={{
-                                                            flex: 1,
-                                                            paddingVertical: getSpacing('lg'),
-                                                            paddingHorizontal: getSpacing('md'),
-                                                            backgroundColor: getColor(colorScheme, 'primary') + '10',
-                                                            borderRadius: 16,
-                                                            borderWidth: 2,
-                                                            borderColor: getColor(colorScheme, 'primary'),
-                                                            alignItems: 'center',
-                                                        }}>
-                                                            <ThemedText style={{
-                                                                fontSize: 12,
-                                                                color: getColor(colorScheme, 'outline'),
-                                                                marginBottom: getSpacing('xs'),
-                                                                fontWeight: '600',
-                                                                letterSpacing: 0.5
-                                                            }}>
-                                                                {t('prices.minPrice')}
-                                                            </ThemedText>
-                                                            <ThemedText style={{
-                                                                fontSize: 20,
-                                                                fontWeight: '700',
-                                                                color: getColor(colorScheme, 'primary'),
-                                                                marginBottom: getSpacing('xs')
-                                                            }}>
-                                                                Rs. {priceData.min}
-                                                            </ThemedText>
-                                                            <ThemedText style={{
-                                                                fontSize: 10,
-                                                                color: getColor(colorScheme, 'outline'),
-                                                                fontWeight: '600'
-                                                            }}>
-                                                                {priceData.unitLabel}
-                                                            </ThemedText>
-                                                        </View>
-
-                                                        {/* Max Price Card */}
-                                                        <View style={{
-                                                            flex: 1,
-                                                            paddingVertical: getSpacing('lg'),
-                                                            paddingHorizontal: getSpacing('md'),
-                                                            backgroundColor: getColor(colorScheme, 'primary') + '10',
-                                                            borderRadius: 16,
-                                                            borderWidth: 2,
-                                                            borderColor: getColor(colorScheme, 'primary'),
-                                                            alignItems: 'center',
-                                                        }}>
-                                                            <ThemedText style={{
-                                                                fontSize: 12,
-                                                                color: getColor(colorScheme, 'outline'),
-                                                                marginBottom: getSpacing('xs'),
-                                                                fontWeight: '600',
-                                                                letterSpacing: 0.5
-                                                            }}>
-                                                                {t('prices.maxPrice')}
-                                                            </ThemedText>
-                                                            <ThemedText style={{
-                                                                fontSize: 20,
-                                                                fontWeight: '700',
-                                                                color: getColor(colorScheme, 'primary'),
-                                                                marginBottom: getSpacing('xs')
-                                                            }}>
-                                                                Rs. {priceData.max}
-                                                            </ThemedText>
-                                                            <ThemedText style={{
-                                                                fontSize: 10,
-                                                                color: getColor(colorScheme, 'outline'),
-                                                                fontWeight: '600'
-                                                            }}>
-                                                                {priceData.unitLabel}
-                                                            </ThemedText>
-                                                        </View>
-                                                    </View>
-                                                );
-                                            })()}
-
-                                            {/* Tap indicator */}
-                                            <View style={{
-                                                flexDirection: 'row',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                marginTop: getSpacing('md'),
-                                                paddingTop: getSpacing('md'),
-                                                borderTopWidth: 1,
-                                                borderTopColor: getColor(colorScheme, 'outline')
-                                            }}>
-                                                <Ionicons name="information-circle" size={16}
-                                                          color={getColor(colorScheme, 'primary')}/>
-                                                <ThemedText style={{
-                                                    marginLeft: getSpacing('sm'),
-                                                    fontSize: 14,
-                                                    color: getColor(colorScheme, 'primary')
-                                                }}>
-                                                    {t('prices.tapForDetails')}
-                                                </ThemedText>
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-
-                                    {/* Pagination Controls */}
-                                    {pagination && pagination.total_pages > 1 && (
-                                        <View style={{
-                                            marginBottom: getSpacing('md'),
-                                            paddingHorizontal: getSpacing('md'),
-                                            paddingVertical: getSpacing('lg'),
-                                            backgroundColor: getColor(colorScheme, 'surface'),
-                                            borderRadius: 12,
-                                            borderWidth: 1,
-                                            borderColor: getColor(colorScheme, 'outline')
-                                        }}>
-
-
-                                            {/* Pagination Buttons */}
-                                            <View style={{
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                gap: getSpacing('md')
-                                            }}>
-                                                {/* Previous Button */}
-                                                <TouchableOpacity
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        borderRadius: 20,
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        backgroundColor: pagination.has_prev
-                                                            ? getColor(colorScheme, 'primary')
-                                                            : getColor(colorScheme, 'outline') + '30',
-                                                        opacity: pagination.has_prev ? 1 : 0.5
-                                                    }}
-                                                    onPress={() => {
-                                                        if (pagination.has_prev) {
-                                                            setCurrentPage(prev => Math.max(1, prev - 1));
-                                                        }
-                                                    }}
-                                                    disabled={!pagination.has_prev || pricesLoading}
-                                                >
-                                                    <Ionicons
-                                                        name="chevron-back"
-                                                        size={20}
-                                                        color={pagination.has_prev
-                                                            ? getColor(colorScheme, 'buttonText')
-                                                            : getColor(colorScheme, 'outline')}
-                                                    />
-
-                                                </TouchableOpacity>
-
-                                                {/* Page Numbers */}
-                                                <View style={{
-                                                    flexDirection: 'row',
-                                                    alignItems: 'center',
-                                                    gap: getSpacing('xs')
-                                                }}>
-                                                    {[...Array(Math.min(4, pagination.total_pages))].map((_, index) => {
-                                                        let pageNum: number;
-
-                                                        if (pagination.total_pages <= 5) {
-                                                            pageNum = index + 1;
-                                                        } else if (pagination.page <= 3) {
-                                                            pageNum = index + 1;
-                                                        } else if (pagination.page >= pagination.total_pages - 2) {
-                                                            pageNum = pagination.total_pages - 4 + index;
-                                                        } else {
-                                                            pageNum = pagination.page - 2 + index;
-                                                        }
-
-                                                        return (
-                                                            <TouchableOpacity
-                                                                key={pageNum}
-                                                                style={{
-                                                                    width: 40,
-                                                                    height: 40,
-                                                                    borderRadius: 20,
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    backgroundColor: pagination.page === pageNum
-                                                                        ? getColor(colorScheme, 'primary')
-                                                                        : 'transparent',
-                                                                    borderWidth: 1,
-                                                                    borderColor: pagination.page === pageNum
-                                                                        ? getColor(colorScheme, 'primary')
-                                                                        : getColor(colorScheme, 'outline')
-                                                                }}
-                                                                onPress={() => setCurrentPage(pageNum)}
-                                                                disabled={pricesLoading}
-                                                            >
-                                                                <ThemedText style={{
-                                                                    fontWeight: '600',
-                                                                    color: pagination.page === pageNum
-                                                                        ? getColor(colorScheme, 'buttonText')
-                                                                        : getColor(colorScheme, 'text')
-                                                                }}>
-                                                                    {pageNum}
-                                                                </ThemedText>
-                                                            </TouchableOpacity>
-                                                        );
-                                                    })}
-                                                </View>
-
-                                                {/* Next Button */}
-                                                <TouchableOpacity
-                                                    style={{
-                                                        width: 40,
-                                                        height: 40,
-                                                        borderRadius: 20,
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        backgroundColor: pagination.has_next
-                                                            ? getColor(colorScheme, 'primary')
-                                                            : getColor(colorScheme, 'outline') + '30',
-                                                        opacity: pagination.has_next ? 1 : 0.5
-                                                    }}
-                                                    onPress={() => {
-                                                        if (pagination.has_next) {
-                                                            setCurrentPage(prev => Math.min(pagination.total_pages, prev + 1));
-                                                        }
-                                                    }}
-                                                    disabled={!pagination.has_next || pricesLoading}
-                                                >
-
-                                                    <Ionicons
-                                                        name="chevron-forward"
-                                                        size={20}
-                                                        color={pagination.has_next
-                                                            ? getColor(colorScheme, 'buttonText')
-                                                            : getColor(colorScheme, 'outline')}
-                                                    />
-                                                </TouchableOpacity>
-                                            </View>
-                                        </View>
-                                    )}
-                                </>
-                            );
-                        })()}
-                    </>
-                )}
-            </ScrollView>
+                    ) : null
+                }
+            />
 
             {/* Crop Selection Modal */}
             <Modal
