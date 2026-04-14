@@ -63,6 +63,7 @@ export default function PricesScreen() {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [pageLimit] = useState(20); // Items per page
+    const [accumulatedPrices, setAccumulatedPrices] = useState<CropPrice[]>([]);
 
     // TanStack Query hooks
     const {
@@ -114,10 +115,30 @@ export default function PricesScreen() {
     } = usePrices(buildFilters());
 
     // Extract data and pagination from response
-    const cropPrices = pricesResponse?.data || [];
     const pagination = pricesResponse?.pagination;
     const hasNextPage = Boolean(pagination?.has_next);
     const isFetchingNextPage = pricesLoading && currentPage > 1;
+
+    // Accumulate prices data
+    useEffect(() => {
+        if (pricesResponse?.data) {
+            if (currentPage === 1) {
+                // Reset on first page or when filters change
+                setAccumulatedPrices(pricesResponse.data);
+            } else {
+                // Append new data for subsequent pages
+                setAccumulatedPrices((prev) => [...prev, ...pricesResponse.data]);
+            }
+        }
+    }, [pricesResponse?.data, currentPage]);
+
+    // Reset accumulated prices when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+        setAccumulatedPrices([]);
+    }, [selectedCity, selectedCrop, selectedSpecificDate]);
+
+    const cropPrices = accumulatedPrices;
 
     const handleEndReached = () => {
         if (hasNextPage && !isFetchingNextPage) {
@@ -189,6 +210,8 @@ export default function PricesScreen() {
 
     // Refresh data
     const onRefresh = async () => {
+        setCurrentPage(1);
+        setAccumulatedPrices([]);
         await Promise.all([
             refetchCities(),
             refetchPrices(),

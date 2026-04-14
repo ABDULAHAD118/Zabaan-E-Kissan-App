@@ -1,4 +1,5 @@
 import { Colors, ColorScheme } from '@/constants/Colors';
+
 // Color utilities
 export const getColor = (colorScheme: ColorScheme, colorKey: keyof typeof Colors.light) => {
   return Colors[colorScheme][colorKey];
@@ -8,15 +9,10 @@ export const getColor = (colorScheme: ColorScheme, colorKey: keyof typeof Colors
 export const getHeaderStyle = (colorScheme: ColorScheme) => ({
   paddingTop: 50,
   paddingHorizontal: 16,
-  paddingBottom: 16,
+  paddingBottom: 15,
   backgroundColor: getColor(colorScheme, 'primary'),
   borderBottomLeftRadius: 24,
   borderBottomRightRadius: 24,
-  shadowColor: getColor(colorScheme, 'shadow'),
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  elevation: 8,
 });
 
 export const getCardStyle = (colorScheme: ColorScheme) => ({
@@ -180,7 +176,7 @@ export const getTextStyle = (colorScheme: ColorScheme, variant: 'title' | 'subti
 
 // Layout utilities
 export const getContainerStyle = (colorScheme: ColorScheme) => ({
-  flex: 1,
+  // flex: 1,
   backgroundColor: getColor(colorScheme, 'background'),
 });
 

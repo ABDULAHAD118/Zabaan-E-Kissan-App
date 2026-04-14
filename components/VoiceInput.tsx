@@ -30,7 +30,7 @@ export default function VoiceInput({ onTranscript, disabled = false }: VoiceInpu
     const recorderState = useAudioRecorderState(audioRecorder);
 
     const [isProcessing, setIsProcessing] = useState(false);
-    const apiLanguage: 'en' | 'ur' = language === 'ur' ? 'ur' : 'en';
+    const apiLanguage: 'en-US' | 'ur-PK' = language === 'ur' ? 'ur-PK' : 'en-US';
 
     const transcribeMutation = useMutation({
         mutationFn: (uri: string) => transcribeAudioApi({uri, language: apiLanguage}),

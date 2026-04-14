@@ -13,7 +13,7 @@ export const API_ENDPOINTS = {
     CITIES: `${ENV.API_BASE_URL}/crop/cities`,
     PRICES: `${ENV.API_BASE_URL}/crop/prices`,
     CHAT: `${ENV.API_BASE_URL}/chat`,
-    TRANSCRIBE: `${ENV.API_BASE_URL}/transcribe`,
+    TRANSCRIBE: `${ENV.API_BASE_URL}/transcribe/google`,
     CROPS: `${ENV.API_BASE_URL}/crop/crops`,
     PREDICT: `${ENV.API_BASE_URL}/disease/predict`,
     CLASSES: `${ENV.API_BASE_URL}/disease/classes`,

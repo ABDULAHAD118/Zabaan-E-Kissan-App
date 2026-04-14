@@ -167,10 +167,10 @@ export default function DiseaseDetectionScreen() {
     const getSupportedCrops = () => [t('home.potato'), t('home.sugarcane'), t('home.rice'), t('home.wheat'), t('home.corn')];
 
     return (
-        <View style={[getContainerStyle(colorScheme), {flex: 1}]}>
+        <View style={getContainerStyle(colorScheme)}>
             <StatusBar barStyle="light-content" backgroundColor={getColor(colorScheme, 'primary')} />
 
-            <View style={[getHeaderStyle(colorScheme), {paddingVertical: getSpacing('xs')}]}>
+            <View style={getHeaderStyle(colorScheme)}>
                 <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: getSpacing('sm')}}>
                     <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
                         <View style={{width: 36, height: 36, borderRadius: 18, backgroundColor: getColor(colorScheme, 'highlight'), alignItems: 'center', justifyContent: 'center', marginRight: getSpacing('sm')}}>
