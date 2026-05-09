@@ -138,7 +138,7 @@ export default function SettingsScreen() {
               fontWeight: '600',
               color: getColor(colorScheme, 'text')
             }}>
-              {t('settings.language')} / زبان
+              {t('settings.language')}
             </ThemedText>
           </View>
 

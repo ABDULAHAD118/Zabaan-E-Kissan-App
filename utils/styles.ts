@@ -176,7 +176,7 @@ export const getTextStyle = (colorScheme: ColorScheme, variant: 'title' | 'subti
 
 // Layout utilities
 export const getContainerStyle = (colorScheme: ColorScheme) => ({
-  // flex: 1,
+  flex: 1,
   backgroundColor: getColor(colorScheme, 'background'),
 });
 
